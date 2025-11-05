@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "355886157679",
+    "project_id": "mun-thrift",
+    "storage_bucket": "mun-thrift.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:355886157679:android:6297c5474938d5397ba29a",
+        "android_client_info": {
+          "package_name": "com.example.comp4768_mun_thrift"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAibzRrtey4kAcT4x1z0aKVDAkSfTuQqU4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
