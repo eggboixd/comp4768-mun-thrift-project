@@ -83,5 +83,4 @@ class DefaultFirebaseOptions {
     authDomain: 'mun-thrift.firebaseapp.com',
     storageBucket: 'mun-thrift.firebasestorage.app',
   );
-
 }
