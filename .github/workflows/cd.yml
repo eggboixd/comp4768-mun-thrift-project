@@ -1,0 +1,64 @@
+name: Flutter CD/Build
+
+on:
+  push:
+    branches: [ prod ]
+  pull_request:
+    branches: [ prod ]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 1. Checkout Repository
+      uses: actions/checkout@v4
+  
+    - name: 2. Set up Java (for Android SDK)
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+  
+    - name: 3. Set up Flutter Environment
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        
+    - name: 4. Install Dependencies
+      run: flutter pub get
+  
+    - name: 5. Decode Keystore File and Setup Signing Properties 🔒
+      env:
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: |
+        # 5a. Decode the Base64 keystore content back into a file
+        echo $KEYSTORE_BASE64 | base64 --decode > android/app/release.jks
+        
+        # 5b. Create the key.properties file that Gradle uses for signing
+        # NOTE: Ensure your android/app/build.gradle references these variables.
+        echo "storeFile=release.jks" > android/key.properties
+        echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+        echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
+        echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+        
+        # Move key.properties to the correct location for Gradle
+        mv android/key.properties android/app/key.properties
+        echo "Signing configuration files created."
+  
+    - name: 6. Build Android APK (Release)
+      run: flutter build apk --release --split-per-abi
+      # The `--split-per-abi` flag generates separate APKs for different architectures 
+      # (e.g., arm64-v8a, armeabi-v7a)
+  
+    - name: 7. Upload APKs to GitHub Release 🚀
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          build/app/outputs/apk/release/*.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
