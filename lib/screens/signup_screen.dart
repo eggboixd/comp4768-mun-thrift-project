@@ -33,7 +33,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(authServiceProvider).signUpWithEmailPassword(
+      await ref
+          .read(authServiceProvider)
+          .signUpWithEmailPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
@@ -44,10 +46,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -80,16 +79,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   Text(
                     'MUN Thrift',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Create your account',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
@@ -161,7 +160,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         ),
                         onPressed: () {
                           setState(
-                              () => _obscureConfirmPassword = !_obscureConfirmPassword);
+                            () => _obscureConfirmPassword =
+                                !_obscureConfirmPassword,
+                          );
                         },
                       ),
                       border: const OutlineInputBorder(),

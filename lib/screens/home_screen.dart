@@ -41,8 +41,8 @@ class HomeScreen extends ConsumerWidget {
               Text(
                 'Welcome!',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -53,9 +53,9 @@ class HomeScreen extends ConsumerWidget {
               Text(
                 user?.email ?? 'Unknown',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const SizedBox(height: 32),
               Card(
