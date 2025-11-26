@@ -40,7 +40,7 @@ class ItemListScreen extends ConsumerWidget {
                   Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
                   const SizedBox(height: 16),
                   Text(
-                    'No ${itemType} items yet',
+                    'No $itemType items yet',
                     style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 8),

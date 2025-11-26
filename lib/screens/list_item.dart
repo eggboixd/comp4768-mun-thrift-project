@@ -7,12 +7,12 @@ class ListItem extends StatelessWidget {
   final double? price;
 
   const ListItem({
-    Key? key,
+    super.key,
     required this.image,
     required this.itemName,
     required this.onTap,
     this.price,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
