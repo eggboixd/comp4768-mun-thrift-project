@@ -46,6 +46,7 @@ class ItemListScreen extends ConsumerWidget {
                 child: ListItem(
                   image: NetworkImage('https://placehold.co/600x400.png'),
                   itemName: '$itemType Item ${firstIndex + 1}',
+                  onTap: () => {},
                   price: 10.26,
                 ),
               ),
@@ -55,6 +56,7 @@ class ItemListScreen extends ConsumerWidget {
                   child: ListItem(
                     image: NetworkImage('https://placehold.co/600x400.png'),
                     itemName: '$itemType Item ${secondIndex + 1}',
+                  onTap: () => {},
                     price: 10.26,
                   ),
                 )
