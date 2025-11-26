@@ -24,9 +24,7 @@ class ListItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(
-                16
-              ),
+              borderRadius: BorderRadius.circular(16),
               // Makes the image a square that fits the width
               child: AspectRatio(
                 aspectRatio: 1,
@@ -65,7 +63,7 @@ class ListItem extends StatelessWidget {
                     ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
