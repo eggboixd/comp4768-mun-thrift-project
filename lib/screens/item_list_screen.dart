@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import 'bottom_nav_bar.dart';
 
+const itemCount = 10;
+
 class ItemListScreen extends ConsumerWidget {
   final String itemType;
   const ItemListScreen({super.key, required this.itemType});
@@ -31,12 +33,34 @@ class ItemListScreen extends ConsumerWidget {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(24.0),
-        itemCount: 10, // Example count
-        itemBuilder: (context, index) {
-          return ListItem(
-            image: NetworkImage('https://placehold.co/600x400.png'), // ImageProvider<Object>
-            itemName: '$itemType Item ${index + 1}',
-            price: 10.26,
+        // 2 items per row
+        // Ceil to handle odd number of items
+        itemCount: (itemCount / 2).ceil(),
+        itemBuilder: (context, rowIndex) {
+          // Calculate indices for the two items in the row
+          final firstIndex = rowIndex * 2;
+          final secondIndex = firstIndex + 1;
+          return Row(
+            children: [
+              Expanded(
+                child: ListItem(
+                  image: NetworkImage('https://placehold.co/600x400.png'),
+                  itemName: '$itemType Item ${firstIndex + 1}',
+                  price: 10.26,
+                ),
+              ),
+              const SizedBox(width: 16),
+              if (secondIndex < itemCount)
+                Expanded(
+                  child: ListItem(
+                    image: NetworkImage('https://placehold.co/600x400.png'),
+                    itemName: '$itemType Item ${secondIndex + 1}',
+                    price: 10.26,
+                  ),
+                )
+              else
+                Expanded(child: Container()), // empty space if odd count
+            ],
           );
         },
       ),
