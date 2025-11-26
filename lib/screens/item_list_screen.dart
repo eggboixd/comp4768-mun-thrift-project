@@ -1,3 +1,4 @@
+import 'package:comp4768_mun_thrift/screens/list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,66 +29,24 @@ class ItemListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.check_circle_outline,
-                size: 100,
-                color: Color(0xFF860134),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Welcome!',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'You are logged in as:',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                user?.email ?? 'Unknown',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Theme.of(context).primaryColor,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.person),
-                        title: const Text('User ID'),
-                        subtitle: Text(user?.uid ?? 'Unknown'),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.email),
-                        title: const Text('Email Verified'),
-                        subtitle: Text(
-                          user?.emailVerified == true ? 'Yes' : 'No',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(24.0),
+        itemCount: 10, // Example count
+        itemBuilder: (context, index) {
+          return ListItem(
+            image: NetworkImage('https://placehold.co/600x400.png'), // ImageProvider<Object>
+            itemName: '$itemType Item ${index + 1}',
+            price: 10.26,
+          );
+        },
       ),
       bottomNavigationBar: BottomNavBar(
         // Determine current index based on itemType
-        currentIndex: itemType == 'free' ? 0 : itemType == 'swap' ? 1 : 2,
+        currentIndex: itemType == 'free'
+            ? 0
+            : itemType == 'swap'
+            ? 1
+            : 2,
       ),
     );
   }
