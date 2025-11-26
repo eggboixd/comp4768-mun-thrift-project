@@ -68,7 +68,9 @@ class ItemListScreen extends ConsumerWidget {
                       image: NetworkImage(items[firstIndex].primaryImageUrl),
                       itemName: items[firstIndex].title,
                       onTap: () {
-                        context.push('/product/$itemType/${items[firstIndex].id}');
+                        context.push(
+                          '/product/$itemType/${items[firstIndex].id}',
+                        );
                       },
                       price: items[firstIndex].price,
                     ),
@@ -80,7 +82,9 @@ class ItemListScreen extends ConsumerWidget {
                         image: NetworkImage(items[secondIndex].primaryImageUrl),
                         itemName: items[secondIndex].title,
                         onTap: () {
-                            context.push('/product/$itemType/${items[secondIndex].id}');
+                          context.push(
+                            '/product/$itemType/${items[secondIndex].id}',
+                          );
                         },
                         price: items[secondIndex].price,
                       ),

@@ -34,54 +34,54 @@ class ProductPage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: 36),
-                       Text(
-                        item.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 20,
-                        ),
+                    Text(
+                      item.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 20,
                       ),
+                    ),
                     const SizedBox(height: 8),
-                     Text(
-                        'Condition: ${item.condition.displayName}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.w500,
-                        ),
+                    Text(
+                      'Condition: ${item.condition.displayName}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
                       ),
-                    const SizedBox(height: 36),
-                   Text(
-                        // TODO: Change to user display name when available and add profile picture
-                        item.userId,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                        ),
-                      ),
+                    ),
                     const SizedBox(height: 36),
                     Text(
-                        'Description',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      // TODO: Change to user display name when available and add profile picture
+                      item.userId,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 36),
+                    Text(
+                      'Description',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        width: 400,
+                        color: Colors.grey[200],
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
+                        child: Text(
+                          item.description,
+                          style: const TextStyle(fontSize: 15),
                         ),
                       ),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          width: 400,
-                          color: Colors.grey[200],
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 16,
-                          ),
-                          child: Text(
-                            item.description,
-                            style: const TextStyle(fontSize: 15),
-                          ),
-                        ),
-                      ),
+                    ),
                     const SizedBox(height: 36),
                     SizedBox(
                       width: 200,
@@ -98,9 +98,21 @@ class ProductPage extends ConsumerWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(itemType == 'free' ? Icons.redeem : itemType == 'trade' ? Icons.swap_horiz : Icons.attach_money),
+                            Icon(
+                              itemType == 'free'
+                                  ? Icons.redeem
+                                  : itemType == 'trade'
+                                  ? Icons.swap_horiz
+                                  : Icons.attach_money,
+                            ),
                             SizedBox(width: 12),
-                            Text(itemType == 'free' ? 'Claim': itemType == 'trade' ? 'Trade' : 'Buy'),
+                            Text(
+                              itemType == 'free'
+                                  ? 'Claim'
+                                  : itemType == 'trade'
+                                  ? 'Trade'
+                                  : 'Buy',
+                            ),
                           ],
                         ),
                       ),

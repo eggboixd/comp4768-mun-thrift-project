@@ -169,7 +169,8 @@ final allItemsControllerProvider =
 class ItemByIdController extends StateNotifier<AsyncValue<Item?>> {
   final FirestoreService _firestoreService;
 
-  ItemByIdController(this._firestoreService) : super(const AsyncValue.loading());
+  ItemByIdController(this._firestoreService)
+    : super(const AsyncValue.loading());
 
   Future<void> loadItemById(String itemId) async {
     state = const AsyncValue.loading();
