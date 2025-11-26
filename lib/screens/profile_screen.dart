@@ -22,11 +22,6 @@ class ProfileScreen extends ConsumerWidget {
         title: const Text('My Profile'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Manage Dummy Data',
-            onPressed: () => context.push('/add-dummy-data'),
-          ),
-          IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
             onPressed: () async {
