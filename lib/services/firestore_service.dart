@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:comp4768_mun_thrift/models/user_info.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide UserInfo;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/item.dart';
 
@@ -15,6 +17,7 @@ class FirestoreService {
 
   // Collection reference
   CollectionReference get _itemsCollection => _firestore.collection('items');
+  CollectionReference get _userInfoCollection => _firestore.collection('user-info');
 
   // Stream of items by type
   Stream<List<Item>> getItemsByType(ItemType type) {
@@ -127,6 +130,48 @@ class FirestoreService {
       }).toList();
     } catch (e) {
       throw Exception('Failed to search items: $e');
+    }
+  }
+
+  // Save user info
+  Future<void> saveUserInfo(String userId, UserInfo userInfo) async {
+    try {
+      await _userInfoCollection.doc(userId).set(userInfo, SetOptions(merge: true));
+    } catch (e) {
+      throw Exception('Failed to save user info: $e');
+    }
+  }
+
+  // Get user info
+  Future<UserInfo?> getUserInfo(String userId) async {
+    try {
+      final doc = await _userInfoCollection.doc(userId).get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        return UserInfo(
+          id: userId,
+          name: data['name'] ?? '',
+          address: data['address'] ?? '',
+          about: data['about'],
+          profileImageUrl: data['profileImageUrl'] ?? '',
+        );
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to get user info: $e');
+    }
+  }
+
+  // Update user info
+  Future<void> updateUserInfo(String userId, UserInfo updates) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null || currentUser.uid != userId) {
+      throw Exception('Unauthorized: You can only update your own info.');
+    }
+    try {
+      await _userInfoCollection.doc(userId).update(updates.toMap());
+    } catch (e) {
+      throw Exception('Failed to update user info: $e');
     }
   }
 }
