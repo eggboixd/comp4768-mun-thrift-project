@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
+import 'bottom_nav_bar.dart';
 
-class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+class ItemListScreen extends ConsumerWidget {
+  final String itemType;
+  const ItemListScreen({super.key, required this.itemType});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -82,6 +84,10 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavBar(
+        // Determine current index based on itemType
+        currentIndex: itemType == 'free' ? 0 : itemType == 'swap' ? 1 : 2,
       ),
     );
   }

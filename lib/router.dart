@@ -2,7 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/item_list_screen.dart';
 import 'services/auth_service.dart';
 
 // GoRouter provider with auth redirect logic
@@ -24,7 +24,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // If logged in and on login/signup pages, redirect to home
       if (isLoggedIn && isLoggingIn) {
-        return '/home';
+        return '/free';
       }
 
       // No redirect needed
@@ -36,7 +36,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
       ),
-      GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      // Main item list routes
+      // Matched routes for /free, /swap, /buy and passes itemType to ItemListScreen
+      GoRoute(
+        path: '/:type(free|swap|buy)',
+        builder: (context, state) {
+          final type = state.pathParameters['type'] ?? 'free';
+          return ItemListScreen(itemType: type);
+        },
+      ),
+      // GoRoute(path: '/profile', builder: (context, state) => const HomeScreen()),
     ],
   );
 });
