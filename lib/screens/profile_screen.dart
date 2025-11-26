@@ -70,6 +70,29 @@ class ProfileScreen extends ConsumerWidget {
                     'Member since ${_formatDate(user?.metadata.creationTime)}',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: 200,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        context.push('/profile/edit');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.edit),
+                          SizedBox(width: 12),
+                          Text('Edit Profile'),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
