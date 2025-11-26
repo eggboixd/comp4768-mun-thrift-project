@@ -19,49 +19,57 @@ class ListItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
           children: [
+            // Image container with fixed aspect ratio
             ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              // Makes the image a square that fits the width
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
               child: AspectRatio(
                 aspectRatio: 1,
-                child: Image(
-                  image: image,
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+                child: Image(image: image, fit: BoxFit.cover),
               ),
             ),
+            // Title and price container
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Column(
-                children: [
-                  Center(
-                    child: Text(
-                      itemName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  // Show price if provided
-                  if (price != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.all(12),
+              child: SizedBox(
+                height: 70,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
                       child: Text(
-                        'Price: \$${price!.toStringAsFixed(2)}',
+                        itemName,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
                         ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                ],
+                    if (price != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '\$${price!.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ],
