@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Items collection rules
+    match /items/{itemId} {
+      // Anyone can read items
+      allow read: if true;
+      
+      // Only authenticated users can create items
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+      
+      // Only the owner can update or delete their items
+      allow update, delete: if request.auth != null 
+                            && request.auth.uid == resource.data.userId;
+    }
+    
+    // Future: Add rules for other collections (users, messages, etc.)
+  }
+}

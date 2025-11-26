@@ -11,7 +11,7 @@ class BottomNavBar extends StatelessWidget {
         context.go('/free');
         break;
       case 1:
-        context.go('/swap');
+        context.go('/trade');
         break;
       case 2:
         context.go('/buy');
@@ -30,7 +30,7 @@ class BottomNavBar extends StatelessWidget {
       onTap: (index) => _onTap(context, index),
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.card_giftcard), label: 'Free'),
-        BottomNavigationBarItem(icon: Icon(Icons.swap_horiz), label: 'Swap'),
+        BottomNavigationBarItem(icon: Icon(Icons.swap_horiz), label: 'Trade'),
         BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Buy'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],

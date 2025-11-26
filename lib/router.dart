@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/item_list_screen.dart';
+import 'screens/profile_screen.dart';
 import 'services/auth_service.dart';
 
 // GoRouter provider with auth redirect logic
@@ -37,15 +38,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SignupScreen(),
       ),
       // Main item list routes
-      // Matched routes for /free, /swap, /buy and passes itemType to ItemListScreen
+      // Matched routes for /free, /trade, /buy and passes itemType to ItemListScreen
       GoRoute(
-        path: '/:type(free|swap|buy)',
+        path: '/:type(free|trade|buy)',
         builder: (context, state) {
           final type = state.pathParameters['type'] ?? 'free';
           return ItemListScreen(itemType: type);
         },
       ),
-      // GoRoute(path: '/profile', builder: (context, state) => const HomeScreen()),
+      // Profile screen
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
     ],
   );
 });
