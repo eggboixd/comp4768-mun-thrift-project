@@ -1,15 +1,20 @@
+import 'package:comp4768_mun_thrift/controllers/user_info_controller.dart';
+import 'package:comp4768_mun_thrift/services/auth_service.dart';
+import 'package:comp4768_mun_thrift/services/storage_service.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class EditProfileScreen extends StatefulWidget {
+class EditProfileScreen extends ConsumerStatefulWidget {
 	const EditProfileScreen({Key? key}) : super(key: key);
 
 	@override
-	State<EditProfileScreen> createState() => _EditProfileScreenState();
+	ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 	File? _image;
 	final picker = ImagePicker();
 	final _nameController = TextEditingController();
@@ -29,6 +34,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
 	@override
 	Widget build(BuildContext context) {
+
+		final user = ref.watch(currentUserProvider);
+
+    // Shouldn't be able to get here either way but just in case
+    if (user == null) {
+      context.go('/login');
+      return Container();
+    }
+
 		return Scaffold(
 			appBar: AppBar(
 				title: const Text('Edit Profile'),
@@ -95,9 +109,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 							),
 							const SizedBox(height: 24),
 							ElevatedButton(
-								onPressed: () {
+								onPressed: () async {
 									if (_formKey.currentState?.validate() ?? false) {
-										// TODO: Save logic here
+                    // Validate image selection
+										if (_image == null) {
+											ScaffoldMessenger.of(context).showSnackBar(
+												const SnackBar(content: Text('Please select a profile image.')),
+											);
+											return;
+										}
+
+                    // Upload image
+										final imageUploader = ref.watch(storageServiceProvider);
+										final imageUrl = await imageUploader.uploadImage(_image!, 'user-images/${user.uid}');
+
+										final userInfo = {
+											'name': _nameController.text.trim(),
+											'address': _addressController.text.trim(),
+											'about': _aboutController.text.trim(),
+											'profileImageUrl': imageUrl,
+										};
+
+                    final userInfoController = ref.watch(userInfoControllerProvider(user.uid));
+                    final userInfoSetController = ref.watch(userInfoControllerProvider(user.uid).notifier);
+
+                    // Check whether to update or save new
+                    await userInfoSetController.loadUserInfo(user.uid);
+                    if (userInfoController.value == null) {
+                      await userInfoSetController.saveUserInfo(user.uid, userInfo);
+                    } else {
+                      await userInfoSetController.updateUserInfo(user.uid, userInfo);
+                    }
+
+										context.go('/profile');
 									}
 								},
 								child: const Text('Save'),

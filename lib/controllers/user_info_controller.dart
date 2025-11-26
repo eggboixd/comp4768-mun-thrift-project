@@ -59,7 +59,7 @@ class UserInfoController extends StateNotifier<AsyncValue<UserInfo?>> {
 	}
 
 	// Update user info
-	Future<void> updateUserInfo(String userId, UserInfo updates) async {
+	Future<void> updateUserInfo(String userId, Map<String, dynamic> updates) async {
 		state = const AsyncValue.loading();
 		try {
 			await _firestoreService.updateUserInfo(userId, updates);
@@ -70,7 +70,7 @@ class UserInfoController extends StateNotifier<AsyncValue<UserInfo?>> {
 	}
 
 	// Save user info (create or merge)
-	Future<void> saveUserInfo(String userId, UserInfo userInfo) async {
+	Future<void> saveUserInfo(String userId, Map<String, dynamic> userInfo) async {
 		state = const AsyncValue.loading();
 		try {
 			await _firestoreService.saveUserInfo(userId, userInfo);

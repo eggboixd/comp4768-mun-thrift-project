@@ -134,7 +134,7 @@ class FirestoreService {
   }
 
   // Save user info
-  Future<void> saveUserInfo(String userId, UserInfo userInfo) async {
+  Future<void> saveUserInfo(String userId, Map<String, dynamic> userInfo) async {
     try {
       await _userInfoCollection.doc(userId).set(userInfo, SetOptions(merge: true));
     } catch (e) {
@@ -163,13 +163,13 @@ class FirestoreService {
   }
 
   // Update user info
-  Future<void> updateUserInfo(String userId, UserInfo updates) async {
+  Future<void> updateUserInfo(String userId, Map<String, dynamic> updates) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null || currentUser.uid != userId) {
       throw Exception('Unauthorized: You can only update your own info.');
     }
     try {
-      await _userInfoCollection.doc(userId).update(updates.toMap());
+      await _userInfoCollection.doc(userId).update(updates);
     } catch (e) {
       throw Exception('Failed to update user info: $e');
     }
