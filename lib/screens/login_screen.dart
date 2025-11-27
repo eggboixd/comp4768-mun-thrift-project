@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
+import '../controllers/cart_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -30,12 +31,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref
+      final userCredential = await ref
           .read(authServiceProvider)
           .signInWithEmailPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
+
+      // Sync cart after successful login
+      if (userCredential.user != null) {
+        await ref
+            .read(cartControllerProvider.notifier)
+            .syncCartOnLogin(userCredential.user!.uid);
+      }
 
       if (mounted) {
         context.go('/home');

@@ -1,11 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:comp4768_mun_thrift/models/cart_item.dart';
 import 'package:comp4768_mun_thrift/models/item.dart';
+import 'package:comp4768_mun_thrift/services/cart_service.dart';
+import 'package:comp4768_mun_thrift/services/auth_service.dart';
 
 class CartController extends StateNotifier<List<CartItem>> {
-  CartController() : super([]);
+  final CartService _cartService;
+  final String? _userId;
 
-  void addToCart(Item item) {
+  CartController(this._cartService, this._userId) : super([]) {
+    _loadCart();
+  }
+
+  // Load cart from storage on initialization
+  Future<void> _loadCart() async {
+    final cart = await _cartService.loadCart(_userId);
+    state = cart;
+  }
+
+  // Save cart to storage after every change
+  Future<void> _saveCart() async {
+    await _cartService.saveCart(_userId, state);
+  }
+
+  void addToCart(Item item) async {
     // Don't add if item is sold out
     if (item.isSoldOut) {
       return;
@@ -25,19 +43,22 @@ class CartController extends StateNotifier<List<CartItem>> {
           quantity: currentQuantity + 1,
         );
         state = updatedCart;
+        await _saveCart();
       }
       // If we've reached max quantity, do nothing
     } else {
       // Item doesn't exist, add new cart item
       state = [...state, CartItem(item: item, quantity: 1)];
+      await _saveCart();
     }
   }
 
-  void removeFromCart(String itemId) {
+  void removeFromCart(String itemId) async {
     state = state.where((cartItem) => cartItem.item.id != itemId).toList();
+    await _saveCart();
   }
 
-  void updateQuantity(String itemId, int quantity) {
+  void updateQuantity(String itemId, int quantity) async {
     if (quantity <= 0) {
       removeFromCart(itemId);
       return;
@@ -55,10 +76,18 @@ class CartController extends StateNotifier<List<CartItem>> {
     }).toList();
 
     state = updatedCart;
+    await _saveCart();
   }
 
-  void clearCart() {
+  void clearCart() async {
     state = [];
+    await _cartService.clearCart(_userId);
+  }
+
+  // Merge local cart with Firestore when user logs in
+  Future<void> syncCartOnLogin(String userId) async {
+    final mergedCart = await _cartService.mergeAndSyncCarts(userId);
+    state = mergedCart;
   }
 
   double get totalAmount {
@@ -76,7 +105,9 @@ class CartController extends StateNotifier<List<CartItem>> {
 
 final cartControllerProvider =
     StateNotifierProvider<CartController, List<CartItem>>((ref) {
-      return CartController();
+      final cartService = ref.watch(cartServiceProvider);
+      final user = ref.watch(currentUserProvider);
+      return CartController(cartService, user?.uid);
     });
 
 // Provider for total amount
