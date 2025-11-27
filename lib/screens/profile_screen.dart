@@ -1,3 +1,4 @@
+import 'package:comp4768_mun_thrift/controllers/user_info_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,10 +13,15 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider);
-    final userItemsAsync = user != null
-        ? ref.watch(userItemsProvider(user.uid))
-        : const AsyncValue.loading();
+    final user = ref.watch(authStateChangesProvider).value;
+
+    if (user == null) {
+      return const Scaffold(body: Center(child: Text('No user logged in')));
+    }
+
+    final userInfoAsync = ref.watch(userInfoControllerProvider(user.uid));
+
+    final userItemsAsync = ref.watch(userItemsProvider(user.uid));
 
     return Scaffold(
       appBar: AppBar(
@@ -37,43 +43,97 @@ class ProfileScreen extends ConsumerWidget {
         child: Column(
           children: [
             // User Info Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+            userInfoAsync.when(
+              loading: () => const CircularProgressIndicator(),
+              error: (error, stack) => Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Error loading user info: $error',
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Theme.of(context).primaryColor,
-                    child: Text(
-                      user?.email?[0].toUpperCase() ?? 'U',
-                      style: const TextStyle(
-                        fontSize: 40,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user?.email ?? 'No email',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Member since ${_formatDate(user?.metadata.creationTime)}',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
+              data: (userInfo) {
+                if (userInfo == null) {
+                  // Redirect to edit profile if userInfo is null
+                  // Use WidgetsBinding to ensure navigation happens after build
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (context.mounted) {
+                      context.go('/profile/edit');
+                    }
+                  });
+                  return Container();
+                }
 
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.1),
+                  ),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundImage: NetworkImage(userInfo.profileImageUrl),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        userInfo.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (userInfo.about != null) ...[
+                        Text(
+                          userInfo.about!,
+                          style: TextStyle(fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                      Text(
+                        'Address: ${userInfo.address}',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Email: ${user.email ?? 'Unknown'}',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                      Text(
+                        'Member since ${_formatDate(user.metadata.creationTime)}',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: 200,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            context.push('/profile/edit');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.edit),
+                              SizedBox(width: 12),
+                              Text('Edit Profile'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
             // My Listings Section
             Padding(
               padding: const EdgeInsets.all(24.0),
