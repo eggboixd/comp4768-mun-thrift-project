@@ -7,8 +7,7 @@ class ProductPage extends ConsumerWidget {
   final String id;
   final String itemType;
 
-  const ProductPage({Key? key, required this.id, required this.itemType})
-    : super(key: key);
+  const ProductPage({super.key, required this.id, required this.itemType});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
