@@ -6,10 +6,16 @@ import 'screens/signup_screen.dart';
 import 'screens/item_list_screen.dart';
 import 'screens/profile_screen.dart';
 import 'services/auth_service.dart';
+import 'controllers/user_info_controller.dart';
 
 // GoRouter provider with auth redirect logic
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
+  // Watch user info for the current user if logged in
+  final userId = authState.value?.uid;
+  final userInfoAsync = userId != null
+      ? ref.watch(userInfoControllerProvider(userId))
+      : null;
 
   return GoRouter(
     initialLocation: '/login',
@@ -24,9 +30,28 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/login';
       }
 
-      // If logged in and on login/signup pages, redirect to home
+      // If logged in and on login/signup pages, check user info
       if (isLoggedIn && isLoggingIn) {
+        // If user info is not loaded or missing required fields, redirect to /profile/edit
+        final userInfo = userInfoAsync?.value;
+        final needsSetup = userInfo == null ||
+          userInfo.name.isEmpty ||
+          userInfo.address.isEmpty;
+        if (needsSetup) {
+          return '/profile/edit';
+        }
         return '/free';
+      }
+
+      // If logged in and user info not set up, force to /profile/edit
+      if (isLoggedIn && state.matchedLocation != '/profile/edit') {
+        final userInfo = userInfoAsync?.value;
+        final needsSetup = userInfo == null ||
+          userInfo.name.isEmpty ||
+          userInfo.address.isEmpty;
+        if (needsSetup) {
+          return '/profile/edit';
+        }
       }
 
       // No redirect needed
