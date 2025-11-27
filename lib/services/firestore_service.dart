@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:comp4768_mun_thrift/models/order.dart';
+import 'package:comp4768_mun_thrift/models/order.dart' as order_model;
 import 'package:comp4768_mun_thrift/models/user_info.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide UserInfo;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -187,7 +187,7 @@ class FirestoreService {
   }
 
   // Create order
-  Future<String> createOrder(Order order) async {
+  Future<String> createOrder(order_model.Order order) async {
     try {
       final docRef = await _ordersCollection.add(order.toMap());
       return docRef.id;
@@ -197,11 +197,11 @@ class FirestoreService {
   }
 
   // Get order by ID
-  Future<Order?> getOrderById(String orderId) async {
+  Future<order_model.Order?> getOrderById(String orderId) async {
     try {
       final doc = await _ordersCollection.doc(orderId).get();
       if (doc.exists) {
-        return Order.fromFirestore(doc);
+        return order_model.Order.fromFirestore(doc);
       }
       return null;
     } catch (e) {
@@ -210,29 +210,36 @@ class FirestoreService {
   }
 
   // Get orders by buyer
-  Stream<List<Order>> getOrdersByBuyer(String buyerId) {
+  Stream<List<order_model.Order>> getOrdersByBuyer(String buyerId) {
     return _ordersCollection
         .where('buyerId', isEqualTo: buyerId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+          return snapshot.docs
+              .map((doc) => order_model.Order.fromFirestore(doc))
+              .toList();
         });
   }
 
   // Get orders containing items from a specific seller
-  Stream<List<Order>> getOrdersForSeller(String sellerId) {
+  Stream<List<order_model.Order>> getOrdersForSeller(String sellerId) {
     return _ordersCollection
         .where('items', arrayContains: {'sellerId': sellerId})
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+          return snapshot.docs
+              .map((doc) => order_model.Order.fromFirestore(doc))
+              .toList();
         });
   }
 
   // Update order status
-  Future<void> updateOrderStatus(String orderId, OrderStatus status) async {
+  Future<void> updateOrderStatus(
+    String orderId,
+    order_model.OrderStatus status,
+  ) async {
     try {
       await _ordersCollection.doc(orderId).update({
         'status': status.name,

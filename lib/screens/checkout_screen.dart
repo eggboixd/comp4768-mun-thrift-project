@@ -1,4 +1,7 @@
 import 'package:comp4768_mun_thrift/controllers/cart_controller.dart';
+import 'package:comp4768_mun_thrift/models/order.dart';
+import 'package:comp4768_mun_thrift/services/auth_service.dart';
+import 'package:comp4768_mun_thrift/services/firestore_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,6 +35,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Widget build(BuildContext context) {
     final cart = ref.watch(cartControllerProvider);
     final total = ref.watch(cartTotalProvider);
+    final user = ref.watch(authStateChangesProvider).value;
 
     if (cart.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -170,43 +174,122 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 child: ElevatedButton(
                   onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      // TODO: Implement order placement logic
-                      // This would typically:
-                      // 1. Create an order document in Firestore
-                      // 2. Update item availability
-                      // 3. Send notification to sellers
-                      // 4. Clear the cart
+                      if (user == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'You must be logged in to place an order',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
 
-                      // For now, show success dialog
+                      // Show loading dialog
                       if (!mounted) return;
-
                       showDialog(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: Text(
-                            isFree ? 'Claim Successful!' : 'Order Placed!',
-                          ),
-                          content: Text(
-                            isFree
-                                ? 'Your items have been claimed. The sellers will contact you soon.'
-                                : 'Your order has been placed successfully. Thank you for your purchase!',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                // Clear cart
-                                ref
-                                    .read(cartControllerProvider.notifier)
-                                    .clearCart();
-
-                                // Navigate to home
-                                context.go('/${widget.itemType}');
-                              },
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
+                        barrierDismissible: false,
+                        builder: (context) =>
+                            const Center(child: CircularProgressIndicator()),
                       );
+
+                      try {
+                        // Create order items from cart
+                        final orderItems = cart.map((cartItem) {
+                          return OrderItem(
+                            itemId: cartItem.item.id ?? '',
+                            itemTitle: cartItem.item.title,
+                            itemImageUrl: cartItem.item.primaryImageUrl,
+                            itemPrice: cartItem.item.price ?? 0,
+                            quantity: cartItem.quantity,
+                            sellerId: cartItem.item.userId,
+                          );
+                        }).toList();
+
+                        // Create order object
+                        final order = Order(
+                          buyerId: user.uid,
+                          items: orderItems,
+                          totalAmount: total,
+                          deliveryName: _nameController.text.trim(),
+                          deliveryAddress: _addressController.text.trim(),
+                          deliveryPhone: _phoneController.text.trim(),
+                          notes: _notesController.text.trim().isEmpty
+                              ? null
+                              : _notesController.text.trim(),
+                          status: OrderStatus.pending,
+                          createdAt: DateTime.now(),
+                        );
+
+                        // Save order to Firestore
+                        final firestoreService = ref.read(
+                          firestoreServiceProvider,
+                        );
+                        final orderId = await firestoreService.createOrder(
+                          order,
+                        );
+
+                        // Mark items as sold/claimed
+                        final itemIds = cart
+                            .map((cartItem) => cartItem.item.id!)
+                            .toList();
+                        await firestoreService.markItemsAsSold(itemIds);
+
+                        // Clear cart
+                        ref.read(cartControllerProvider.notifier).clearCart();
+
+                        // Close loading dialog
+                        if (!mounted) return;
+                        Navigator.of(context).pop();
+
+                        // Show success dialog
+                        if (!mounted) return;
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text(
+                              isFree ? 'Claim Successful!' : 'Order Placed!',
+                            ),
+                            content: Text(
+                              isFree
+                                  ? 'Your items have been claimed. The sellers will contact you soon.\n\nOrder ID: $orderId'
+                                  : 'Your order has been placed successfully. Thank you for your purchase!\n\nOrder ID: $orderId',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  context.go('/${widget.itemType}');
+                                },
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      } catch (e) {
+                        // Close loading dialog
+                        if (!mounted) return;
+                        Navigator.of(context).pop();
+
+                        // Show error dialog
+                        if (!mounted) return;
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Error'),
+                            content: Text('Failed to place order: $e'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(

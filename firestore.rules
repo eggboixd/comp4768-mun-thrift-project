@@ -17,6 +17,29 @@ service cloud.firestore {
                             && request.auth.uid == resource.data.userId;
     }
     
-    // Future: Add rules for other collections (users, messages, etc.)
+    // Orders collection rules
+    match /orders/{orderId} {
+      // Users can read their own orders (as buyer)
+      allow read: if request.auth != null 
+                  && request.auth.uid == resource.data.buyerId;
+      
+      // Authenticated users can create orders
+      allow create: if request.auth != null
+                    && request.resource.data.buyerId == request.auth.uid;
+      
+      // Only the buyer can update their order
+      allow update: if request.auth != null 
+                    && request.auth.uid == resource.data.buyerId;
+    }
+    
+    // User info collection rules
+    match /user-info/{userId} {
+      // Users can read any user info (for displaying seller profiles)
+      allow read: if true;
+      
+      // Users can only create/update their own info
+      allow create, update: if request.auth != null 
+                            && request.auth.uid == userId;
+    }
   }
 }
