@@ -1,3 +1,4 @@
+import 'package:comp4768_mun_thrift/screens/product_page.dart';
 import 'package:comp4768_mun_thrift/screens/edit_profile_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,6 +73,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final type = state.pathParameters['type'] ?? 'free';
           return ItemListScreen(itemType: type);
+        },
+      ),
+      GoRoute(
+        path: '/product/:type(free|trade|buy)/:id',
+        builder: (context, state) {
+          final type = state.pathParameters['type'] ?? 'free';
+          final itemId = state.pathParameters['id']!;
+          return ProductPage(id: itemId, itemType: type);
         },
       ),
       // Profile screen

@@ -68,11 +68,8 @@ class ItemListScreen extends ConsumerWidget {
                       image: NetworkImage(items[firstIndex].primaryImageUrl),
                       itemName: items[firstIndex].title,
                       onTap: () {
-                        // TODO: Navigate to item detail page
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Tapped: ${items[firstIndex].title}'),
-                          ),
+                        context.push(
+                          '/product/$itemType/${items[firstIndex].id}',
                         );
                       },
                       price: items[firstIndex].price,
@@ -85,13 +82,8 @@ class ItemListScreen extends ConsumerWidget {
                         image: NetworkImage(items[secondIndex].primaryImageUrl),
                         itemName: items[secondIndex].title,
                         onTap: () {
-                          // TODO: Navigate to item detail page
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Tapped: ${items[secondIndex].title}',
-                              ),
-                            ),
+                          context.push(
+                            '/product/$itemType/${items[secondIndex].id}',
                           );
                         },
                         price: items[secondIndex].price,
