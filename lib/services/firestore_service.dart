@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:comp4768_mun_thrift/models/order.dart';
 import 'package:comp4768_mun_thrift/models/user_info.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide UserInfo;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,7 @@ class FirestoreService {
   CollectionReference get _itemsCollection => _firestore.collection('items');
   CollectionReference get _userInfoCollection =>
       _firestore.collection('user-info');
+  CollectionReference get _ordersCollection => _firestore.collection('orders');
 
   // Stream of items by type
   Stream<List<Item>> getItemsByType(ItemType type) {
@@ -181,6 +183,79 @@ class FirestoreService {
       await _userInfoCollection.doc(userId).update(updates);
     } catch (e) {
       throw Exception('Failed to update user info: $e');
+    }
+  }
+
+  // Create order
+  Future<String> createOrder(Order order) async {
+    try {
+      final docRef = await _ordersCollection.add(order.toMap());
+      return docRef.id;
+    } catch (e) {
+      throw Exception('Failed to create order: $e');
+    }
+  }
+
+  // Get order by ID
+  Future<Order?> getOrderById(String orderId) async {
+    try {
+      final doc = await _ordersCollection.doc(orderId).get();
+      if (doc.exists) {
+        return Order.fromFirestore(doc);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to get order: $e');
+    }
+  }
+
+  // Get orders by buyer
+  Stream<List<Order>> getOrdersByBuyer(String buyerId) {
+    return _ordersCollection
+        .where('buyerId', isEqualTo: buyerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+        });
+  }
+
+  // Get orders containing items from a specific seller
+  Stream<List<Order>> getOrdersForSeller(String sellerId) {
+    return _ordersCollection
+        .where('items', arrayContains: {'sellerId': sellerId})
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+        });
+  }
+
+  // Update order status
+  Future<void> updateOrderStatus(String orderId, OrderStatus status) async {
+    try {
+      await _ordersCollection.doc(orderId).update({
+        'status': status.name,
+        'updatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update order status: $e');
+    }
+  }
+
+  // Mark items as sold/claimed
+  Future<void> markItemsAsSold(List<String> itemIds) async {
+    try {
+      final batch = _firestore.batch();
+      for (final itemId in itemIds) {
+        batch.update(_itemsCollection.doc(itemId), {
+          'isAvailable': false,
+          'updatedAt': Timestamp.now(),
+        });
+      }
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Failed to mark items as sold: $e');
     }
   }
 }

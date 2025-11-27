@@ -1,7 +1,9 @@
+import 'package:comp4768_mun_thrift/controllers/cart_controller.dart';
 import 'package:comp4768_mun_thrift/controllers/item_controller.dart';
 import 'package:comp4768_mun_thrift/screens/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class ProductPage extends ConsumerWidget {
   final String id;
@@ -102,7 +104,23 @@ class ProductPage extends ConsumerWidget {
                         width: 200,
                         child: ElevatedButton(
                           onPressed: () {
-                            // TODO: Add logic
+                            final cartController = ref.read(
+                              cartControllerProvider.notifier,
+                            );
+                            cartController.addToCart(item);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${item.title} added to cart'),
+                                duration: const Duration(seconds: 2),
+                                action: SnackBarAction(
+                                  label: 'View Cart',
+                                  onPressed: () {
+                                    context.push('/cart/$itemType');
+                                  },
+                                ),
+                              ),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -115,18 +133,18 @@ class ProductPage extends ConsumerWidget {
                             children: [
                               Icon(
                                 itemType == 'free'
-                                    ? Icons.redeem
+                                    ? Icons.add_shopping_cart
                                     : itemType == 'trade'
                                     ? Icons.swap_horiz
-                                    : Icons.attach_money,
+                                    : Icons.add_shopping_cart,
                               ),
                               SizedBox(width: 12),
                               Text(
                                 itemType == 'free'
-                                    ? 'Claim'
+                                    ? 'Add to Cart'
                                     : itemType == 'trade'
                                     ? 'Trade'
-                                    : 'Buy',
+                                    : 'Add to Cart',
                               ),
                             ],
                           ),

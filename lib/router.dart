@@ -1,5 +1,7 @@
 import 'package:comp4768_mun_thrift/screens/product_page.dart';
 import 'package:comp4768_mun_thrift/screens/edit_profile_screen.dart';
+import 'package:comp4768_mun_thrift/screens/cart_screen.dart';
+import 'package:comp4768_mun_thrift/screens/checkout_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/login_screen.dart';
@@ -81,6 +83,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           final type = state.pathParameters['type'] ?? 'free';
           final itemId = state.pathParameters['id']!;
           return ProductPage(id: itemId, itemType: type);
+        },
+      ),
+      // Cart routes
+      GoRoute(
+        path: '/cart/:type(free|trade|buy)',
+        builder: (context, state) {
+          final type = state.pathParameters['type'] ?? 'free';
+          return CartScreen(itemType: type);
+        },
+      ),
+      GoRoute(
+        path: '/checkout/:type(free|trade|buy)',
+        builder: (context, state) {
+          final type = state.pathParameters['type'] ?? 'free';
+          return CheckoutScreen(itemType: type);
         },
       ),
       // Profile screen
