@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:comp4768_mun_thrift/models/order.dart' as order_model;
 import 'package:comp4768_mun_thrift/models/user_info.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide UserInfo;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,7 @@ class FirestoreService {
   CollectionReference get _itemsCollection => _firestore.collection('items');
   CollectionReference get _userInfoCollection =>
       _firestore.collection('user-info');
+  CollectionReference get _ordersCollection => _firestore.collection('orders');
 
   // Stream of items by type
   Stream<List<Item>> getItemsByType(ItemType type) {
@@ -181,6 +183,265 @@ class FirestoreService {
       await _userInfoCollection.doc(userId).update(updates);
     } catch (e) {
       throw Exception('Failed to update user info: $e');
+    }
+  }
+
+  // Create order
+  Future<String> createOrder(order_model.Order order) async {
+    try {
+      final docRef = await _ordersCollection.add(order.toMap());
+      return docRef.id;
+    } catch (e) {
+      throw Exception('Failed to create order: $e');
+    }
+  }
+
+  // Get order by ID
+  Future<order_model.Order?> getOrderById(String orderId) async {
+    try {
+      final doc = await _ordersCollection.doc(orderId).get();
+      if (doc.exists) {
+        return order_model.Order.fromFirestore(doc);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to get order: $e');
+    }
+  }
+
+  // Get orders by buyer
+  Stream<List<order_model.Order>> getOrdersByBuyer(String buyerId) {
+    return _ordersCollection
+        .where('buyerId', isEqualTo: buyerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => order_model.Order.fromFirestore(doc))
+              .toList();
+        });
+  }
+
+  // Get orders containing items from a specific seller
+  Stream<List<order_model.Order>> getOrdersForSeller(String sellerId) {
+    return _ordersCollection
+        .where('sellerIds', arrayContains: sellerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => order_model.Order.fromFirestore(doc))
+              .toList();
+        });
+  }
+
+  // Update order status
+  Future<void> updateOrderStatus(
+    String orderId,
+    order_model.OrderStatus status,
+  ) async {
+    try {
+      await _ordersCollection.doc(orderId).update({
+        'status': status.name,
+        'updatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update order status: $e');
+    }
+  }
+
+  // Decrease item quantity when purchased/claimed
+  Future<void> decreaseItemQuantity(
+    String itemId,
+    int quantityPurchased,
+  ) async {
+    try {
+      final doc = await _itemsCollection.doc(itemId).get();
+      if (!doc.exists) {
+        throw Exception('Item not found');
+      }
+
+      final currentQuantity =
+          (doc.data() as Map<String, dynamic>)['quantity'] ?? 1;
+      final newQuantity = currentQuantity - quantityPurchased;
+
+      await _itemsCollection.doc(itemId).update({
+        'quantity': newQuantity > 0 ? newQuantity : 0,
+        'isAvailable': newQuantity > 0,
+        'updatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      throw Exception('Failed to decrease item quantity: $e');
+    }
+  }
+
+  // Mark items as sold/claimed (legacy - now use decreaseItemQuantity)
+  Future<void> markItemsAsSold(List<String> itemIds) async {
+    try {
+      final batch = _firestore.batch();
+      for (final itemId in itemIds) {
+        batch.update(_itemsCollection.doc(itemId), {
+          'isAvailable': false,
+          'updatedAt': Timestamp.now(),
+        });
+      }
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Failed to mark items as sold: $e');
+    }
+  }
+
+  // Batch decrease quantities for multiple items
+  Future<void> decreaseMultipleItemQuantities(
+    Map<String, int> itemQuantities,
+  ) async {
+    try {
+      final batch = _firestore.batch();
+
+      for (final entry in itemQuantities.entries) {
+        final itemId = entry.key;
+        final quantityPurchased = entry.value;
+
+        final doc = await _itemsCollection.doc(itemId).get();
+        if (doc.exists) {
+          final currentQuantity =
+              (doc.data() as Map<String, dynamic>)['quantity'] ?? 1;
+          final newQuantity = currentQuantity - quantityPurchased;
+
+          batch.update(_itemsCollection.doc(itemId), {
+            'quantity': newQuantity > 0 ? newQuantity : 0,
+            'isAvailable': newQuantity > 0,
+            'updatedAt': Timestamp.now(),
+          });
+        }
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Failed to decrease item quantities: $e');
+    }
+  }
+
+  // Notification methods
+  CollectionReference get _notificationsCollection =>
+      _firestore.collection('notifications');
+
+  // Create a notification
+  Future<String> createNotification({
+    required String userId,
+    required String type,
+    required String title,
+    required String message,
+    String? orderId,
+    String? fromUserId,
+    String? fromUserName,
+  }) async {
+    try {
+      final notificationData = {
+        'userId': userId,
+        'type': type,
+        'title': title,
+        'message': message,
+        'orderId': orderId,
+        'fromUserId': fromUserId,
+        'fromUserName': fromUserName,
+        'isRead': false,
+        'createdAt': Timestamp.now(),
+      };
+
+      final docRef = await _notificationsCollection.add(notificationData);
+      return docRef.id;
+    } catch (e) {
+      throw Exception('Failed to create notification: $e');
+    }
+  }
+
+  // Get user notifications
+  Stream<List<Map<String, dynamic>>> getUserNotifications(String userId) {
+    return _notificationsCollection
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return {'id': doc.id, ...data};
+          }).toList();
+        });
+  }
+
+  // Mark notification as read
+  Future<void> markNotificationAsRead(String notificationId) async {
+    try {
+      await _notificationsCollection.doc(notificationId).update({
+        'isRead': true,
+      });
+    } catch (e) {
+      throw Exception('Failed to mark notification as read: $e');
+    }
+  }
+
+  // Get unread notification count
+  Stream<int> getUnreadNotificationCount(String userId) {
+    return _notificationsCollection
+        .where('userId', isEqualTo: userId)
+        .where('isRead', isEqualTo: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
+  // Update order status and create notification
+  Future<void> updateOrderStatusWithNotification({
+    required String orderId,
+    required order_model.OrderStatus newStatus,
+    required String buyerId,
+    String? sellerMessage,
+  }) async {
+    try {
+      // Update order status
+      await _ordersCollection.doc(orderId).update({
+        'status': newStatus.name,
+        'updatedAt': Timestamp.now(),
+      });
+
+      // Create notification for buyer
+      String title = '';
+      String message = '';
+
+      switch (newStatus) {
+        case order_model.OrderStatus.confirmed:
+          title = 'Order Accepted';
+          message =
+              sellerMessage ??
+              'Your order has been accepted by the seller and will be prepared for delivery.';
+          break;
+        case order_model.OrderStatus.cancelled:
+          title = 'Order Rejected';
+          message =
+              sellerMessage ??
+              'Your order has been rejected by the seller. Please contact them for more information.';
+          break;
+        case order_model.OrderStatus.completed:
+          title = 'Order Completed';
+          message = 'Your order has been marked as completed.';
+          break;
+        default:
+          return;
+      }
+
+      await createNotification(
+        userId: buyerId,
+        type: newStatus == order_model.OrderStatus.confirmed
+            ? 'orderAccepted'
+            : newStatus == order_model.OrderStatus.cancelled
+            ? 'orderRejected'
+            : 'orderCompleted',
+        title: title,
+        message: message,
+        orderId: orderId,
+      );
+    } catch (e) {
+      throw Exception('Failed to update order status: $e');
     }
   }
 }

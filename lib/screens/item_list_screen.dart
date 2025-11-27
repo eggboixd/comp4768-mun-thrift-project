@@ -1,3 +1,4 @@
+import 'package:comp4768_mun_thrift/controllers/cart_controller.dart';
 import 'package:comp4768_mun_thrift/screens/list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,11 +14,48 @@ class ItemListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itemsAsync = ref.watch(itemsByTypeStringProvider(itemType));
+    final cartItemCount = ref.watch(cartItemCountProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('MUN Thrift'),
         actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.shopping_cart),
+                tooltip: 'Cart',
+                onPressed: () {
+                  context.push('/cart/$itemType');
+                },
+              ),
+              if (cartItemCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '$cartItemCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
@@ -156,6 +194,12 @@ class ItemListScreen extends ConsumerWidget {
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.push('/profile/create-listing');
+        },
+        child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: itemType == 'free'

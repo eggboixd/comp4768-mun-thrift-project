@@ -12,11 +12,48 @@ service cloud.firestore {
       allow create: if request.auth != null
                     && request.resource.data.userId == request.auth.uid;
       
-      // Only the owner can update or delete their items
-      allow update, delete: if request.auth != null 
-                            && request.auth.uid == resource.data.userId;
+      // Owner can update/delete OR authenticated users can decrease quantity
+      allow update: if request.auth != null 
+                    && (request.auth.uid == resource.data.userId
+                        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity'])
+                            && request.resource.data.quantity < resource.data.quantity));
+      
+      allow delete: if request.auth != null 
+                    && request.auth.uid == resource.data.userId;
     }
     
-    // Future: Add rules for other collections (users, messages, etc.)
+    // Orders collection rules
+    match /orders/{orderId} {
+      // Allow any authenticated user to read orders (for development)
+      allow read: if request.auth != null;
+      // Authenticated users can create orders
+      allow create: if request.auth != null
+                    && request.resource.data.buyerId == request.auth.uid;
+      // Buyer or any seller can update the order (for status changes)
+      allow update: if request.auth != null 
+                    && (request.auth.uid == resource.data.buyerId
+                        || (resource.data.sellerIds is list && resource.data.sellerIds.hasAny([request.auth.uid])));
+    }
+    
+    // Notifications collection rules
+    match /notifications/{notificationId} {
+      // Allow any authenticated user to read, get, and list notifications
+      allow read, get, list: if request.auth != null;
+      // Authenticated users can create notifications
+      allow create: if request.auth != null;
+      // Users can update their own notifications (for marking as read)
+      allow update: if request.auth != null 
+                    && request.auth.uid == resource.data.userId;
+    }
+    
+    // User info collection rules
+    match /user-info/{userId} {
+      // Users can read any user info (for displaying seller profiles)
+      allow read: if true;
+      
+      // Users can only create/update their own info
+      allow create, update: if request.auth != null 
+                            && request.auth.uid == userId;
+    }
   }
 }

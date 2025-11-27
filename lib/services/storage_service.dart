@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,11 +13,14 @@ class StorageService {
 
   StorageService(this._storage);
 
-  // Upload image and return download URL
-  Future<String> uploadImage(File imageFile, String path) async {
+  // Upload image from bytes and return download URL (works on all platforms)
+  Future<String> uploadImageBytes(Uint8List imageBytes, String path) async {
     try {
       final storageRef = _storage.ref().child(path);
-      final uploadTask = await storageRef.putFile(imageFile);
+      final uploadTask = await storageRef.putData(
+        imageBytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
       final downloadUrl = await uploadTask.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
@@ -25,18 +28,17 @@ class StorageService {
     }
   }
 
-  // Upload multiple images
-  Future<List<String>> uploadImages(
-    List<File> imageFiles,
+  // Upload multiple images from bytes
+  Future<List<String>> uploadMultipleImageBytes(
+    List<Uint8List> imageBytesList,
     String basePath,
   ) async {
     try {
       final List<String> downloadUrls = [];
 
-      for (int i = 0; i < imageFiles.length; i++) {
-        final path =
-            '$basePath/image_$i${_getFileExtension(imageFiles[i].path)}';
-        final url = await uploadImage(imageFiles[i], path);
+      for (int i = 0; i < imageBytesList.length; i++) {
+        final path = '$basePath/image_$i.jpg';
+        final url = await uploadImageBytes(imageBytesList[i], path);
         downloadUrls.add(url);
       }
 
@@ -65,11 +67,6 @@ class StorageService {
     } catch (e) {
       throw Exception('Failed to delete images: $e');
     }
-  }
-
-  // Get file extension from path
-  String _getFileExtension(String path) {
-    return path.substring(path.lastIndexOf('.'));
   }
 
   // Generate unique path for item images

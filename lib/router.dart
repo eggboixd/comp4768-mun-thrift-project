@@ -1,5 +1,10 @@
 import 'package:comp4768_mun_thrift/screens/product_page.dart';
 import 'package:comp4768_mun_thrift/screens/edit_profile_screen.dart';
+import 'package:comp4768_mun_thrift/screens/cart_screen.dart';
+import 'package:comp4768_mun_thrift/screens/checkout_screen.dart';
+import 'package:comp4768_mun_thrift/screens/create_listing_screen.dart';
+import 'package:comp4768_mun_thrift/screens/notifications_screen.dart';
+import 'package:comp4768_mun_thrift/screens/seller_orders_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/login_screen.dart';
@@ -83,6 +88,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           return ProductPage(id: itemId, itemType: type);
         },
       ),
+      // Cart routes
+      GoRoute(
+        path: '/cart/:type(free|trade|buy)',
+        builder: (context, state) {
+          final type = state.pathParameters['type'] ?? 'free';
+          return CartScreen(itemType: type);
+        },
+      ),
+      GoRoute(
+        path: '/checkout/:type(free|trade|buy)',
+        builder: (context, state) {
+          final type = state.pathParameters['type'] ?? 'free';
+          return CheckoutScreen(itemType: type);
+        },
+      ),
       // Profile screen
       GoRoute(
         path: '/profile',
@@ -91,6 +111,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/edit',
         builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/create-listing',
+        builder: (context, state) => const CreateListingScreen(),
+      ),
+      // Notifications and orders
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/seller-orders',
+        builder: (context, state) => const SellerOrdersScreen(),
       ),
     ],
   );
