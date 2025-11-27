@@ -6,7 +6,6 @@ import '../models/item.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import 'bottom_nav_bar.dart';
-import 'list_item.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -129,6 +128,65 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                context.push('/notifications');
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.notifications, size: 20),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Notifications',
+                                    style: TextStyle(fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                context.push('/seller-orders');
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.shopping_bag, size: 20),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'My Sales',
+                                    style: TextStyle(fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 );
@@ -180,6 +238,11 @@ class ProfileScreen extends ConsumerWidget {
                         );
                       }
 
+                      // Filter only available items
+                      final availableItems = items
+                          .where((item) => item.isAvailable)
+                          .toList();
+
                       return Column(
                         children: [
                           // Stats Row
@@ -201,10 +264,7 @@ class ProfileScreen extends ConsumerWidget {
                                 Expanded(
                                   child: _StatCard(
                                     label: 'Available',
-                                    value: items
-                                        .where((Item item) => item.isAvailable)
-                                        .length
-                                        .toString(),
+                                    value: availableItems.length.toString(),
                                     icon: Icons.check_circle,
                                     color: Colors.green,
                                   ),
@@ -227,65 +287,133 @@ class ProfileScreen extends ConsumerWidget {
                           const SizedBox(height: 24),
 
                           // Items Grid
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: (items.length / 2).ceil(),
-                            itemBuilder: (context, rowIndex) {
-                              final firstIndex = rowIndex * 2;
-                              final secondIndex = firstIndex + 1;
-
-                              return Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: ListItem(
-                                      image: NetworkImage(
-                                        items[firstIndex].primaryImageUrl,
-                                      ),
-                                      itemName: items[firstIndex].title,
-                                      onTap: () {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Tapped: ${items[firstIndex].title}',
-                                            ),
+                          if (availableItems.isEmpty)
+                            Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(32.0),
+                                child: Text(
+                                  'No available listings',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.75,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                  ),
+                              itemCount: availableItems.length,
+                              itemBuilder: (context, index) {
+                                final item = availableItems[index];
+                                final itemType = item.type.name;
+                                return GestureDetector(
+                                  onTap: () {
+                                    context.push(
+                                      '/product/$itemType/${item.id}',
+                                    );
+                                  },
+                                  child: Card(
+                                    clipBehavior: Clip.antiAlias,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Stack(
+                                            fit: StackFit.expand,
+                                            children: [
+                                              Image.network(
+                                                item.primaryImageUrl,
+                                                fit: BoxFit.cover,
+                                                errorBuilder:
+                                                    (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) {
+                                                      return Container(
+                                                        color: Colors.grey[300],
+                                                        child: const Icon(
+                                                          Icons
+                                                              .image_not_supported,
+                                                        ),
+                                                      );
+                                                    },
+                                              ),
+                                              Positioned(
+                                                top: 8,
+                                                right: 8,
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black54,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
+                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 6,
+                                                        vertical: 2,
+                                                      ),
+                                                  child: Text(
+                                                    'Qty: ${item.quantity}',
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        );
-                                      },
-                                      price: items[firstIndex].price,
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                item.title,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                item.price == null ||
+                                                        item.price == 0
+                                                    ? 'Free'
+                                                    : '\$${item.price?.toStringAsFixed(2)}',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: Colors.grey[700],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
-                                  if (secondIndex < items.length)
-                                    Expanded(
-                                      child: ListItem(
-                                        image: NetworkImage(
-                                          items[secondIndex].primaryImageUrl,
-                                        ),
-                                        itemName: items[secondIndex].title,
-                                        onTap: () {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                'Tapped: ${items[secondIndex].title}',
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        price: items[secondIndex].price,
-                                      ),
-                                    )
-                                  else
-                                    Expanded(child: Container()),
-                                ],
-                              );
-                            },
-                          ),
+                                );
+                              },
+                            ),
                         ],
                       );
                     },

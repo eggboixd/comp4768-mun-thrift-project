@@ -64,6 +64,7 @@ class Order {
   final String? id;
   final String buyerId;
   final List<OrderItem> items;
+  final List<String> sellerIds;
   final double totalAmount;
   final String deliveryName;
   final String deliveryAddress;
@@ -77,6 +78,7 @@ class Order {
     this.id,
     required this.buyerId,
     required this.items,
+    required this.sellerIds,
     required this.totalAmount,
     required this.deliveryName,
     required this.deliveryAddress,
@@ -91,6 +93,7 @@ class Order {
     return {
       'buyerId': buyerId,
       'items': items.map((item) => item.toMap()).toList(),
+      'sellerIds': sellerIds,
       'totalAmount': totalAmount,
       'deliveryName': deliveryName,
       'deliveryAddress': deliveryAddress,
@@ -110,6 +113,11 @@ class Order {
       items:
           (data['items'] as List<dynamic>?)
               ?.map((item) => OrderItem.fromMap(item as Map<String, dynamic>))
+              .toList() ??
+          [],
+      sellerIds:
+          (data['sellerIds'] as List<dynamic>?)
+              ?.map((e) => e as String)
               .toList() ??
           [],
       totalAmount: (data['totalAmount'] ?? 0).toDouble(),
@@ -132,6 +140,7 @@ class Order {
     String? id,
     String? buyerId,
     List<OrderItem>? items,
+    List<String>? sellerIds,
     double? totalAmount,
     String? deliveryName,
     String? deliveryAddress,
@@ -145,6 +154,7 @@ class Order {
       id: id ?? this.id,
       buyerId: buyerId ?? this.buyerId,
       items: items ?? this.items,
+      sellerIds: sellerIds ?? this.sellerIds,
       totalAmount: totalAmount ?? this.totalAmount,
       deliveryName: deliveryName ?? this.deliveryName,
       deliveryAddress: deliveryAddress ?? this.deliveryAddress,

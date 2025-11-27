@@ -207,10 +207,17 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           );
                         }).toList();
 
+                        // Collect unique seller IDs
+                        final uniqueSellers = <String>{};
+                        for (final cartItem in cart) {
+                          uniqueSellers.add(cartItem.item.userId);
+                        }
+
                         // Create order object
                         final order = Order(
                           buyerId: user.uid,
                           items: orderItems,
+                          sellerIds: uniqueSellers.toList(),
                           totalAmount: total,
                           deliveryName: _nameController.text.trim(),
                           deliveryAddress: _addressController.text.trim(),
@@ -230,14 +237,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           order,
                         );
 
-                        // Decrease item quantities based on what was purchased
-                        final itemQuantities = <String, int>{};
-                        for (final cartItem in cart) {
-                          itemQuantities[cartItem.item.id] = cartItem.quantity;
+                        // Create notifications for sellers
+                        for (final sellerId in uniqueSellers) {
+                          await firestoreService.createNotification(
+                            userId: sellerId,
+                            type: 'orderRequest',
+                            title: 'New Order Request',
+                            message:
+                                '${_nameController.text} wants to ${isFree ? "claim" : "buy"} your items. Please review the order.',
+                            orderId: orderId,
+                            fromUserId: user.uid,
+                            fromUserName: _nameController.text,
+                          );
                         }
-                        await firestoreService.decreaseMultipleItemQuantities(
-                          itemQuantities,
-                        );
 
                         // Clear cart
                         ref.read(cartControllerProvider.notifier).clearCart();
