@@ -16,4 +16,17 @@ class CartItem {
   double get totalPrice {
     return (item.price ?? 0) * quantity;
   }
+
+  // Convert CartItem to JSON for persistence
+  Map<String, dynamic> toJson() {
+    return {'item': item.toJson(), 'quantity': quantity};
+  }
+
+  // Create CartItem from JSON
+  factory CartItem.fromJson(Map<String, dynamic> json) {
+    return CartItem(
+      item: Item.fromMap(json['item'] as Map<String, dynamic>),
+      quantity: json['quantity'] as int,
+    );
+  }
 }

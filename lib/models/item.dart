@@ -102,6 +102,26 @@ class Item {
     };
   }
 
+  // Convert Item to JSON for local storage
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'type': type.name,
+      'price': price,
+      'imageUrls': imageUrls,
+      'userId': userId,
+      'userEmail': userEmail,
+      'condition': condition.name,
+      'category': category,
+      'quantity': quantity,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'isAvailable': isAvailable,
+    };
+  }
+
   // Create Item from Firestore document
   factory Item.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -122,6 +142,33 @@ class Item {
       quantity: data['quantity'] ?? 1,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      isAvailable: data['isAvailable'] ?? true,
+    );
+  }
+
+  // Create Item from Map (for local storage/JSON)
+  factory Item.fromMap(Map<String, dynamic> data) {
+    return Item(
+      id: data['id'] ?? '',
+      title: data['title'] ?? '',
+      description: data['description'] ?? '',
+      type: ItemType.fromString(data['type'] ?? 'free'),
+      price: data['price']?.toDouble(),
+      imageUrls: List<String>.from(data['imageUrls'] ?? []),
+      userId: data['userId'] ?? '',
+      userEmail: data['userEmail'] ?? '',
+      condition: ItemCondition.values.firstWhere(
+        (c) => c.name == data['condition'],
+        orElse: () => ItemCondition.good,
+      ),
+      category: data['category'],
+      quantity: data['quantity'] ?? 1,
+      createdAt: data['createdAt'] is String
+          ? DateTime.parse(data['createdAt'])
+          : (data['createdAt'] as Timestamp).toDate(),
+      updatedAt: data['updatedAt'] is String
+          ? DateTime.parse(data['updatedAt'])
+          : (data['updatedAt'] as Timestamp).toDate(),
       isAvailable: data['isAvailable'] ?? true,
     );
   }
