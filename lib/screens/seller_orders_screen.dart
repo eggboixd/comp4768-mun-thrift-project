@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/order.dart' as order_model;
@@ -64,7 +63,7 @@ class SellerOrdersScreen extends ConsumerWidget {
 
               final myTotal = myItems.fold<double>(
                 0,
-                (sum, item) => sum + (item.itemPrice * item.quantity),
+                (total, item) => total + (item.itemPrice * item.quantity),
               );
 
               return Card(

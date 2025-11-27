@@ -198,7 +198,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         // Create order items from cart
                         final orderItems = cart.map((cartItem) {
                           return OrderItem(
-                            itemId: cartItem.item.id ?? '',
+                            itemId: cartItem.item.id,
                             itemTitle: cartItem.item.title,
                             itemImageUrl: cartItem.item.primaryImageUrl,
                             itemPrice: cartItem.item.price ?? 0,

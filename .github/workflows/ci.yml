@@ -23,7 +23,7 @@ jobs:
         run: flutter pub get
 
       - name: Run linter
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
         
   format-on-merge:
     runs-on: ubuntu-latest

@@ -14,8 +14,6 @@ class CartScreen extends ConsumerWidget {
     final cartController = ref.read(cartControllerProvider.notifier);
     final total = ref.watch(cartTotalProvider);
 
-    final isFree = itemType == 'free';
-
     return Scaffold(
       appBar: AppBar(title: const Text('Shopping Cart'), centerTitle: true),
       body: cart.isEmpty
