@@ -171,6 +171,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       );
                     }
 
+                    if (!mounted) return;
+                    // ignore: use_build_context_synchronously
                     context.go('/profile');
                   }
                 },
