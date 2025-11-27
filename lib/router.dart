@@ -34,9 +34,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isLoggedIn && isLoggingIn) {
         // If user info is not loaded or missing required fields, redirect to /profile/edit
         final userInfo = userInfoAsync?.value;
-        final needsSetup = userInfo == null ||
-          userInfo.name.isEmpty ||
-          userInfo.address.isEmpty;
+        final needsSetup =
+            userInfo == null ||
+            userInfo.name.isEmpty ||
+            userInfo.address.isEmpty;
         if (needsSetup) {
           return '/profile/edit';
         }
@@ -46,9 +47,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       // If logged in and user info not set up, force to /profile/edit
       if (isLoggedIn && state.matchedLocation != '/profile/edit') {
         final userInfo = userInfoAsync?.value;
-        final needsSetup = userInfo == null ||
-          userInfo.name.isEmpty ||
-          userInfo.address.isEmpty;
+        final needsSetup =
+            userInfo == null ||
+            userInfo.name.isEmpty ||
+            userInfo.address.isEmpty;
         if (needsSetup) {
           return '/profile/edit';
         }

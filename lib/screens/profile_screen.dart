@@ -89,9 +89,7 @@ class ProfileScreen extends ConsumerWidget {
                       if (userInfo.about != null) ...[
                         Text(
                           userInfo.about!,
-                          style: TextStyle(
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(fontSize: 14),
                           textAlign: TextAlign.center,
                         ),
                       ],
