@@ -164,3 +164,32 @@ final allItemsControllerProvider =
       controller.loadAllItems();
       return controller;
     });
+
+// Controller for single item by ID
+class ItemByIdController extends StateNotifier<AsyncValue<Item?>> {
+  final FirestoreService _firestoreService;
+
+  ItemByIdController(this._firestoreService)
+    : super(const AsyncValue.loading());
+
+  Future<void> loadItemById(String itemId) async {
+    state = const AsyncValue.loading();
+    try {
+      final item = await _firestoreService.getItemById(itemId);
+      state = AsyncValue.data(item);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+}
+
+// Provider for single item by ID
+final itemByIdControllerProvider =
+    StateNotifierProvider.family<ItemByIdController, AsyncValue<Item?>, String>(
+      (ref, itemId) {
+        final firestoreService = ref.watch(firestoreServiceProvider);
+        final controller = ItemByIdController(firestoreService);
+        controller.loadItemById(itemId);
+        return controller;
+      },
+    );
