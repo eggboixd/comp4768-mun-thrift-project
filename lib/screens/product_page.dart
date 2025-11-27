@@ -67,6 +67,43 @@ class ProductPage extends ConsumerWidget {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Quantity: ${item.quantity}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: item.isSoldOut
+                                  ? Colors.red
+                                  : Colors.grey[700],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (item.isSoldOut) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'SOLD OUT',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                       const SizedBox(height: 36),
                       Text(
                         // TODO: Change to user display name when available and add profile picture
@@ -103,25 +140,29 @@ class ProductPage extends ConsumerWidget {
                       SizedBox(
                         width: 200,
                         child: ElevatedButton(
-                          onPressed: () {
-                            final cartController = ref.read(
-                              cartControllerProvider.notifier,
-                            );
-                            cartController.addToCart(item);
+                          onPressed: item.isSoldOut
+                              ? null
+                              : () {
+                                  final cartController = ref.read(
+                                    cartControllerProvider.notifier,
+                                  );
+                                  cartController.addToCart(item);
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${item.title} added to cart'),
-                                duration: const Duration(seconds: 2),
-                                action: SnackBarAction(
-                                  label: 'View Cart',
-                                  onPressed: () {
-                                    context.push('/cart/$itemType');
-                                  },
-                                ),
-                              ),
-                            );
-                          },
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        '${item.title} added to cart',
+                                      ),
+                                      duration: const Duration(seconds: 2),
+                                      action: SnackBarAction(
+                                        label: 'View Cart',
+                                        onPressed: () {
+                                          context.push('/cart/$itemType');
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
@@ -132,7 +173,9 @@ class ProductPage extends ConsumerWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                itemType == 'free'
+                                item.isSoldOut
+                                    ? Icons.block
+                                    : itemType == 'free'
                                     ? Icons.add_shopping_cart
                                     : itemType == 'trade'
                                     ? Icons.swap_horiz
@@ -140,7 +183,9 @@ class ProductPage extends ConsumerWidget {
                               ),
                               SizedBox(width: 12),
                               Text(
-                                itemType == 'free'
+                                item.isSoldOut
+                                    ? 'Sold Out'
+                                    : itemType == 'free'
                                     ? 'Add to Cart'
                                     : itemType == 'trade'
                                     ? 'Trade'

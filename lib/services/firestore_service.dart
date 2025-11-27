@@ -250,7 +250,32 @@ class FirestoreService {
     }
   }
 
-  // Mark items as sold/claimed
+  // Decrease item quantity when purchased/claimed
+  Future<void> decreaseItemQuantity(
+    String itemId,
+    int quantityPurchased,
+  ) async {
+    try {
+      final doc = await _itemsCollection.doc(itemId).get();
+      if (!doc.exists) {
+        throw Exception('Item not found');
+      }
+
+      final currentQuantity =
+          (doc.data() as Map<String, dynamic>)['quantity'] ?? 1;
+      final newQuantity = currentQuantity - quantityPurchased;
+
+      await _itemsCollection.doc(itemId).update({
+        'quantity': newQuantity > 0 ? newQuantity : 0,
+        'isAvailable': newQuantity > 0,
+        'updatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      throw Exception('Failed to decrease item quantity: $e');
+    }
+  }
+
+  // Mark items as sold/claimed (legacy - now use decreaseItemQuantity)
   Future<void> markItemsAsSold(List<String> itemIds) async {
     try {
       final batch = _firestore.batch();
@@ -263,6 +288,37 @@ class FirestoreService {
       await batch.commit();
     } catch (e) {
       throw Exception('Failed to mark items as sold: $e');
+    }
+  }
+
+  // Batch decrease quantities for multiple items
+  Future<void> decreaseMultipleItemQuantities(
+    Map<String, int> itemQuantities,
+  ) async {
+    try {
+      final batch = _firestore.batch();
+
+      for (final entry in itemQuantities.entries) {
+        final itemId = entry.key;
+        final quantityPurchased = entry.value;
+
+        final doc = await _itemsCollection.doc(itemId).get();
+        if (doc.exists) {
+          final currentQuantity =
+              (doc.data() as Map<String, dynamic>)['quantity'] ?? 1;
+          final newQuantity = currentQuantity - quantityPurchased;
+
+          batch.update(_itemsCollection.doc(itemId), {
+            'quantity': newQuantity > 0 ? newQuantity : 0,
+            'isAvailable': newQuantity > 0,
+            'updatedAt': Timestamp.now(),
+          });
+        }
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Failed to decrease item quantities: $e');
     }
   }
 }

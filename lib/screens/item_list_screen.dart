@@ -195,6 +195,12 @@ class ItemListScreen extends ConsumerWidget {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.push('/profile/create-listing');
+        },
+        child: const Icon(Icons.add),
+      ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: itemType == 'free'
             ? 0

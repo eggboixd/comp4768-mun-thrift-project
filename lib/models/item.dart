@@ -58,6 +58,7 @@ class Item {
   final String userEmail;
   final ItemCondition condition;
   final String? category;
+  final int quantity; // quantity available for sale
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isAvailable;
@@ -73,10 +74,14 @@ class Item {
     required this.userEmail,
     required this.condition,
     this.category,
+    this.quantity = 1,
     required this.createdAt,
     required this.updatedAt,
     this.isAvailable = true,
   });
+
+  // Check if item is sold out
+  bool get isSoldOut => quantity <= 0;
 
   // Convert Item to Map for Firestore
   Map<String, dynamic> toMap() {
@@ -90,6 +95,7 @@ class Item {
       'userEmail': userEmail,
       'condition': condition.name,
       'category': category,
+      'quantity': quantity,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
       'isAvailable': isAvailable,
@@ -113,6 +119,7 @@ class Item {
         orElse: () => ItemCondition.good,
       ),
       category: data['category'],
+      quantity: data['quantity'] ?? 1,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
       isAvailable: data['isAvailable'] ?? true,
@@ -138,6 +145,7 @@ class Item {
     String? userEmail,
     ItemCondition? condition,
     String? category,
+    int? quantity,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isAvailable,
@@ -153,6 +161,7 @@ class Item {
       userEmail: userEmail ?? this.userEmail,
       condition: condition ?? this.condition,
       category: category ?? this.category,
+      quantity: quantity ?? this.quantity,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isAvailable: isAvailable ?? this.isAvailable,

@@ -101,6 +101,14 @@ class CartScreen extends ConsumerWidget {
                                         fontSize: 14,
                                       ),
                                     ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Available: ${cartItem.item.quantity}',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
                                     const SizedBox(height: 8),
                                     Row(
                                       children: [
@@ -133,12 +141,16 @@ class CartScreen extends ConsumerWidget {
                                           icon: const Icon(
                                             Icons.add_circle_outline,
                                           ),
-                                          onPressed: () {
-                                            cartController.updateQuantity(
-                                              cartItem.item.id,
-                                              cartItem.quantity + 1,
-                                            );
-                                          },
+                                          onPressed:
+                                              cartItem.quantity >=
+                                                  cartItem.item.quantity
+                                              ? null
+                                              : () {
+                                                  cartController.updateQuantity(
+                                                    cartItem.item.id,
+                                                    cartItem.quantity + 1,
+                                                  );
+                                                },
                                           padding: EdgeInsets.zero,
                                           constraints: const BoxConstraints(),
                                         ),

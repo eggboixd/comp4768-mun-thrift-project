@@ -333,6 +333,13 @@ class ProfileScreen extends ConsumerWidget {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          context.push('/profile/create-listing');
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('List Item'),
+      ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 3),
     );
   }

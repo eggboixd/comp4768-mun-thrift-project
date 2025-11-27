@@ -230,11 +230,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           order,
                         );
 
-                        // Mark items as sold/claimed
-                        final itemIds = cart
-                            .map((cartItem) => cartItem.item.id!)
-                            .toList();
-                        await firestoreService.markItemsAsSold(itemIds);
+                        // Decrease item quantities based on what was purchased
+                        final itemQuantities = <String, int>{};
+                        for (final cartItem in cart) {
+                          itemQuantities[cartItem.item.id] = cartItem.quantity;
+                        }
+                        await firestoreService.decreaseMultipleItemQuantities(
+                          itemQuantities,
+                        );
 
                         // Clear cart
                         ref.read(cartControllerProvider.notifier).clearCart();
