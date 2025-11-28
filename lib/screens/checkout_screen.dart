@@ -213,7 +213,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           uniqueSellers.add(cartItem.item.userId);
                         }
 
-                        // Create order object
+                        // Create order object with initial progress
+                        final now = DateTime.now();
                         final order = Order(
                           buyerId: user.uid,
                           items: orderItems,
@@ -226,7 +227,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                               ? null
                               : _notesController.text.trim(),
                           status: OrderStatus.pending,
-                          createdAt: DateTime.now(),
+                          progressHistory: [
+                            OrderProgress(
+                              status: OrderStatus.pending,
+                              timestamp: now,
+                              note: 'Order placed',
+                            ),
+                          ],
+                          createdAt: now,
                         );
 
                         // Save order to Firestore
@@ -262,7 +270,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         if (!mounted) return;
                         showDialog(
                           context: context,
-                          builder: (context) => AlertDialog(
+                          builder: (dialogContext) => AlertDialog(
                             title: Text(
                               isFree ? 'Claim Successful!' : 'Order Placed!',
                             ),
@@ -274,8 +282,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             actions: [
                               TextButton(
                                 onPressed: () {
-                                  Navigator.of(context).pop();
-                                  context.go('/${widget.itemType}');
+                                  Navigator.of(dialogContext).pop();
+                                  if (mounted) context.go('/${widget.itemType}');
                                 },
                                 child: const Text('OK'),
                               ),
@@ -291,7 +299,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         if (!mounted) return;
                         showDialog(
                           context: context,
-                          builder: (context) => AlertDialog(
+                          builder: (dialogContext) => AlertDialog(
                             title: const Text('Error'),
                             content: Text('Failed to place order: $e'),
                             actions: [

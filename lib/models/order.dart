@@ -1,8 +1,38 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+class OrderProgress {
+  final OrderStatus status;
+  final DateTime timestamp;
+  final String? note;
+
+  OrderProgress({required this.status, required this.timestamp, this.note});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'status': status.name,
+      'timestamp': Timestamp.fromDate(timestamp),
+      'note': note,
+    };
+  }
+
+  factory OrderProgress.fromMap(Map<String, dynamic> map) {
+    return OrderProgress(
+      status: OrderStatus.values.firstWhere(
+        (e) => e.name == map['status'],
+        orElse: () => OrderStatus.pending,
+      ),
+      timestamp: (map['timestamp'] as Timestamp).toDate(),
+      note: map['note'],
+    );
+  }
+}
+
 enum OrderStatus {
   pending,
   confirmed,
+  preparing,
+  shipped,
+  inDelivery,
   completed,
   cancelled;
 
@@ -12,10 +42,35 @@ enum OrderStatus {
         return 'Pending';
       case OrderStatus.confirmed:
         return 'Confirmed';
+      case OrderStatus.preparing:
+        return 'Preparing';
+      case OrderStatus.shipped:
+        return 'Shipped';
+      case OrderStatus.inDelivery:
+        return 'In Delivery';
       case OrderStatus.completed:
         return 'Completed';
       case OrderStatus.cancelled:
         return 'Cancelled';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case OrderStatus.pending:
+        return 'Waiting for seller confirmation';
+      case OrderStatus.confirmed:
+        return 'Order has been confirmed by seller';
+      case OrderStatus.preparing:
+        return 'Seller is preparing your order';
+      case OrderStatus.shipped:
+        return 'Order has been shipped';
+      case OrderStatus.inDelivery:
+        return 'Order is on the way to you';
+      case OrderStatus.completed:
+        return 'Order has been delivered';
+      case OrderStatus.cancelled:
+        return 'Order was cancelled';
     }
   }
 }
@@ -71,6 +126,7 @@ class Order {
   final String deliveryPhone;
   final String? notes;
   final OrderStatus status;
+  final List<OrderProgress> progressHistory;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -85,9 +141,10 @@ class Order {
     required this.deliveryPhone,
     this.notes,
     required this.status,
+    List<OrderProgress>? progressHistory,
     required this.createdAt,
     this.updatedAt,
-  });
+  }) : progressHistory = progressHistory ?? [];
 
   Map<String, dynamic> toMap() {
     return {
@@ -100,6 +157,7 @@ class Order {
       'deliveryPhone': deliveryPhone,
       'notes': notes,
       'status': status.name,
+      'progressHistory': progressHistory.map((p) => p.toMap()).toList(),
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
     };
@@ -129,6 +187,11 @@ class Order {
         (e) => e.name == data['status'],
         orElse: () => OrderStatus.pending,
       ),
+      progressHistory:
+          (data['progressHistory'] as List<dynamic>?)
+              ?.map((p) => OrderProgress.fromMap(p as Map<String, dynamic>))
+              .toList() ??
+          [],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: data['updatedAt'] != null
           ? (data['updatedAt'] as Timestamp).toDate()
@@ -147,6 +210,7 @@ class Order {
     String? deliveryPhone,
     String? notes,
     OrderStatus? status,
+    List<OrderProgress>? progressHistory,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -161,6 +225,7 @@ class Order {
       deliveryPhone: deliveryPhone ?? this.deliveryPhone,
       notes: notes ?? this.notes,
       status: status ?? this.status,
+      progressHistory: progressHistory ?? this.progressHistory,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -7,6 +7,8 @@ import 'package:comp4768_mun_thrift/screens/notifications_screen.dart';
 import 'package:comp4768_mun_thrift/screens/seller_orders_screen.dart';
 import 'package:comp4768_mun_thrift/screens/trade_offer_screen.dart';
 import 'package:comp4768_mun_thrift/screens/trade_offer_details_screen.dart';
+import 'package:comp4768_mun_thrift/screens/order_history_screen.dart';
+import 'package:comp4768_mun_thrift/screens/order_details_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/login_screen.dart';
@@ -146,6 +148,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/seller-orders',
         builder: (context, state) => const SellerOrdersScreen(),
+      ),
+      GoRoute(
+        path: '/order-history',
+        builder: (context, state) => const OrderHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/order-details/:orderId',
+        builder: (context, state) {
+          final orderId = state.pathParameters['orderId']!;
+          return OrderDetailsScreen(orderId: orderId);
+        },
       ),
     ],
   );

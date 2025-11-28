@@ -188,21 +188,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       ref.invalidate(userInfoControllerProvider(user.uid));
 
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Profile saved successfully!'),
-                        ),
-                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profile saved successfully!'),
+                          ),
+                        );
+                      }
 
                       // Navigate after a brief delay
                       await Future.delayed(const Duration(milliseconds: 500));
                       if (!mounted) return;
-                      context.go('/profile');
+                      if (mounted) context.go('/profile');
                     } catch (e) {
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error saving profile: $e')),
-                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error saving profile: $e')),
+                        );
+                      }
                     }
                   }
                 },

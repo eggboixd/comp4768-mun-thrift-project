@@ -101,6 +101,7 @@ class NotificationsScreen extends ConsumerWidget {
                     }
 
                     // Navigate based on notification type
+                    // ignore: use_build_context_synchronously
                     if (notification['tradeOfferId'] != null) {
                       // Navigate to trade offer details
                       context.push(
@@ -108,6 +109,7 @@ class NotificationsScreen extends ConsumerWidget {
                       );
                     } else if (notification['orderId'] != null) {
                       // Navigate to seller orders
+                      // ignore: use_build_context_synchronously
                       context.push('/seller-orders');
                     }
                   },

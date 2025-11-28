@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:comp4768_mun_thrift/models/item.dart';
-import 'package:comp4768_mun_thrift/models/trade_offer.dart';
 import 'package:comp4768_mun_thrift/services/auth_service.dart';
 import 'package:comp4768_mun_thrift/services/firestore_service.dart';
 import 'package:flutter/material.dart';

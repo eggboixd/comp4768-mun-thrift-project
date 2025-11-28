@@ -27,7 +27,6 @@ class CartService {
       };
       await _getUserCartRef(userId).set(cartData);
     } catch (e) {
-      print('Error saving cart to Firestore: $e');
       // Don't throw - we want the app to continue working even if Firestore fails
     }
   }
@@ -47,7 +46,6 @@ class CartService {
       }
       return [];
     } catch (e) {
-      print('Error loading cart from Firestore: $e');
       return [];
     }
   }
@@ -57,7 +55,7 @@ class CartService {
     try {
       await _getUserCartRef(userId).delete();
     } catch (e) {
-      print('Error clearing cart from Firestore: $e');
+      // Silently fail - clearing is best effort
     }
   }
 
@@ -68,7 +66,7 @@ class CartService {
       final cartData = cartItems.map((item) => item.toJson()).toList();
       await box.put(_hiveCartKey, cartData);
     } catch (e) {
-      print('Error saving cart to local storage: $e');
+      // Silently fail - local save is best effort
     }
   }
 
@@ -84,7 +82,6 @@ class CartService {
       }
       return [];
     } catch (e) {
-      print('Error loading cart from local storage: $e');
       return [];
     }
   }
@@ -95,7 +92,7 @@ class CartService {
       final box = await Hive.openBox(_hiveBoxName);
       await box.delete(_hiveCartKey);
     } catch (e) {
-      print('Error clearing cart from local storage: $e');
+      // Silently fail - clearing is best effort
     }
   }
 

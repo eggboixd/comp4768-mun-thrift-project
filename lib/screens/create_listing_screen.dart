@@ -26,7 +26,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
   ItemType _selectedType = ItemType.free;
   ItemCondition _selectedCondition = ItemCondition.good;
-  List<Uint8List> _imageBytesList = [];
+  final List<Uint8List> _imageBytesList = [];
   bool _isLoading = false;
 
   final ImagePicker _picker = ImagePicker();
@@ -57,8 +57,6 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         return;
       }
 
-      print('Attempting to pick image...');
-
       // Use pickImage for web compatibility
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -67,14 +65,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         imageQuality: 85,
       );
 
-      print(
-        'Image picker returned: ${pickedFile != null ? "success" : "cancelled"}',
-      );
-
       if (pickedFile != null) {
-        print('Reading image bytes...');
         final bytes = await pickedFile.readAsBytes();
-        print('Image size: ${bytes.length} bytes');
 
         setState(() {
           _imageBytesList.add(bytes);
@@ -89,12 +81,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
             ),
           );
         }
-      } else {
-        print('No image selected');
       }
-    } catch (e, stackTrace) {
-      print('Error picking image: $e');
-      print('Stack trace: $stackTrace');
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -133,8 +121,6 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       final user = ref.read(currentUserProvider);
       if (user == null) throw Exception('User not authenticated');
 
-      print('Starting image upload for user: ${user.uid}');
-
       // Generate a temporary item ID
       final tempItemId = DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -143,22 +129,17 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       final List<String> imageUrls = [];
 
       for (int i = 0; i < _imageBytesList.length; i++) {
-        print('Uploading image ${i + 1}/${_imageBytesList.length}');
         final path = storageService.generateItemImagePath(
           user.uid,
           tempItemId,
           i,
         );
-        print('Upload path: $path');
         final url = await storageService.uploadImageBytes(
           _imageBytesList[i],
           path,
         );
-        print('Image uploaded: $url');
         imageUrls.add(url);
       }
-
-      print('All images uploaded. Creating item...');
 
       // Create item
       final item = Item(
@@ -183,10 +164,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       );
 
       // Add to Firestore
-      print('Adding item to Firestore...');
       final firestoreService = ref.read(firestoreServiceProvider);
-      final itemId = await firestoreService.addItem(item);
-      print('Item added successfully with ID: $itemId');
+      await firestoreService.addItem(item);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -198,9 +177,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         );
         context.go('/profile');
       }
-    } catch (e, stackTrace) {
-      print('Error creating listing: $e');
-      print('Stack trace: $stackTrace');
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -327,27 +304,48 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: RadioListTile<ItemType>(
-                      title: const Text('Free'),
-                      value: ItemType.free,
-                      groupValue: _selectedType,
-                      onChanged: (value) {
-                        setState(() => _selectedType = value!);
-                      },
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedType = ItemType.free),
+                      child: Row(
+                        children: [
+                          Radio<ItemType>(
+                            value: ItemType.free,
+                            groupValue: _selectedType,
+                            onChanged: (value) => setState(() => _selectedType = value!),
+                          ),
+                          const Text('Free'),
+                        ],
+                      ),
                     ),
                   ),
                   Expanded(
-                    child: RadioListTile<ItemType>(
-                      title: const Text('Sell'),
-                      value: ItemType.buy,
-                      groupValue: _selectedType,
-                      onChanged: (value) {
-                        setState(() => _selectedType = value!);
-                      },
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedType = ItemType.trade),
+                      child: Row(
+                        children: [
+                          Radio<ItemType>(
+                            value: ItemType.trade,
+                            groupValue: _selectedType,
+                            onChanged: (value) => setState(() => _selectedType = value!),
+                          ),
+                          const Text('Trade'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedType = ItemType.buy),
+                      child: Row(
+                        children: [
+                          Radio<ItemType>(
+                            value: ItemType.buy,
+                            groupValue: _selectedType,
+                            onChanged: (value) => setState(() => _selectedType = value!),
+                          ),
+                          const Text('Sell'),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -440,7 +438,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
               // Condition dropdown
               DropdownButtonFormField<ItemCondition>(
-                value: _selectedCondition,
+                initialValue: _selectedCondition,
                 decoration: const InputDecoration(
                   labelText: 'Condition',
                   border: OutlineInputBorder(),
