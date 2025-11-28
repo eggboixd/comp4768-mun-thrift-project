@@ -283,7 +283,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                               TextButton(
                                 onPressed: () {
                                   Navigator.of(dialogContext).pop();
-                                  if (mounted) context.go('/${widget.itemType}');
+                                  if (mounted)
+                                    context.go('/${widget.itemType}');
                                 },
                                 child: const Text('OK'),
                               ),

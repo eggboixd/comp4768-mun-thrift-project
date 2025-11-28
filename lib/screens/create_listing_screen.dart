@@ -305,13 +305,15 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                 children: [
                   Expanded(
                     child: InkWell(
-                      onTap: () => setState(() => _selectedType = ItemType.free),
+                      onTap: () =>
+                          setState(() => _selectedType = ItemType.free),
                       child: Row(
                         children: [
                           Radio<ItemType>(
                             value: ItemType.free,
                             groupValue: _selectedType,
-                            onChanged: (value) => setState(() => _selectedType = value!),
+                            onChanged: (value) =>
+                                setState(() => _selectedType = value!),
                           ),
                           const Text('Free'),
                         ],
@@ -320,13 +322,15 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                   ),
                   Expanded(
                     child: InkWell(
-                      onTap: () => setState(() => _selectedType = ItemType.trade),
+                      onTap: () =>
+                          setState(() => _selectedType = ItemType.trade),
                       child: Row(
                         children: [
                           Radio<ItemType>(
                             value: ItemType.trade,
                             groupValue: _selectedType,
-                            onChanged: (value) => setState(() => _selectedType = value!),
+                            onChanged: (value) =>
+                                setState(() => _selectedType = value!),
                           ),
                           const Text('Trade'),
                         ],
@@ -341,7 +345,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                           Radio<ItemType>(
                             value: ItemType.buy,
                             groupValue: _selectedType,
-                            onChanged: (value) => setState(() => _selectedType = value!),
+                            onChanged: (value) =>
+                                setState(() => _selectedType = value!),
                           ),
                           const Text('Sell'),
                         ],
