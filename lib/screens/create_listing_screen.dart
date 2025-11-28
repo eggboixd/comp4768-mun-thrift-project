@@ -121,6 +121,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       final user = ref.read(currentUserProvider);
       if (user == null) throw Exception('User not authenticated');
 
+      // Ensure auth token is fresh before uploading to Storage
+      await user.getIdToken(true);
+
       // Generate a temporary item ID
       final tempItemId = DateTime.now().millisecondsSinceEpoch.toString();
 
