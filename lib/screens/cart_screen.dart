@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 enum CartFilter { all, free, paid }
+
 enum CartSort { none, priceAsc, priceDesc }
 
 class CartScreen extends ConsumerStatefulWidget {
@@ -23,7 +24,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   List<CartItem> _getFilteredAndSortedCart(List<CartItem> cart) {
     // Apply filter
     List<CartItem> filtered = cart;
-    
+
     switch (_currentFilter) {
       case CartFilter.free:
         filtered = cart.where((item) => (item.item.price ?? 0) == 0).toList();
@@ -39,12 +40,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     // Apply sort
     switch (_currentSort) {
       case CartSort.priceAsc:
-        filtered.sort((a, b) => 
-          (a.item.price ?? 0).compareTo(b.item.price ?? 0));
+        filtered.sort(
+          (a, b) => (a.item.price ?? 0).compareTo(b.item.price ?? 0),
+        );
         break;
       case CartSort.priceDesc:
-        filtered.sort((a, b) => 
-          (b.item.price ?? 0).compareTo(a.item.price ?? 0));
+        filtered.sort(
+          (a, b) => (b.item.price ?? 0).compareTo(a.item.price ?? 0),
+        );
         break;
       case CartSort.none:
         break;
@@ -58,7 +61,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final cart = ref.watch(cartControllerProvider);
     final cartController = ref.read(cartControllerProvider.notifier);
     final total = ref.watch(cartTotalProvider);
-    
+
     final filteredCart = _getFilteredAndSortedCart(cart);
 
     return Scaffold(
@@ -203,131 +206,138 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           itemCount: filteredCart.length,
                           itemBuilder: (context, index) {
                             final cartItem = filteredCart[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  cartItem.item.primaryImageUrl,
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      width: 80,
-                                      height: 80,
-                                      color: Colors.grey[300],
-                                      child: const Icon(
-                                        Icons.broken_image,
-                                        color: Colors.grey,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      cartItem.item.title,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      (cartItem.item.price ?? 0) == 0
-                                          ? 'Free'
-                                          : '\$${(cartItem.item.price ?? 0).toStringAsFixed(2)}',
-                                      style: TextStyle(
-                                        color: Colors.grey[700],
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Available: ${cartItem.item.quantity}',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        cartItem.item.primaryImageUrl,
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return Container(
+                                                width: 80,
+                                                height: 80,
+                                                color: Colors.grey[300],
+                                                child: const Icon(
+                                                  Icons.broken_image,
+                                                  color: Colors.grey,
+                                                ),
+                                              );
+                                            },
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.remove_circle_outline,
-                                          ),
-                                          onPressed: () {
-                                            cartController.updateQuantity(
-                                              cartItem.item.id,
-                                              cartItem.quantity - 1,
-                                            );
-                                          },
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                          ),
-                                          child: Text(
-                                            '${cartItem.quantity}',
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            cartItem.item.title,
                                             style: const TextStyle(
-                                              fontSize: 16,
                                               fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            (cartItem.item.price ?? 0) == 0
+                                                ? 'Free'
+                                                : '\$${(cartItem.item.price ?? 0).toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              color: Colors.grey[700],
+                                              fontSize: 14,
                                             ),
                                           ),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.add_circle_outline,
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Available: ${cartItem.item.quantity}',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 12,
+                                            ),
                                           ),
-                                          onPressed:
-                                              cartItem.quantity >=
-                                                  cartItem.item.quantity
-                                              ? null
-                                              : () {
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.remove_circle_outline,
+                                                ),
+                                                onPressed: () {
                                                   cartController.updateQuantity(
                                                     cartItem.item.id,
-                                                    cartItem.quantity + 1,
+                                                    cartItem.quantity - 1,
                                                   );
                                                 },
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                        ),
-                                      ],
+                                                padding: EdgeInsets.zero,
+                                                constraints:
+                                                    const BoxConstraints(),
+                                              ),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                    ),
+                                                child: Text(
+                                                  '${cartItem.quantity}',
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.add_circle_outline,
+                                                ),
+                                                onPressed:
+                                                    cartItem.quantity >=
+                                                        cartItem.item.quantity
+                                                    ? null
+                                                    : () {
+                                                        cartController
+                                                            .updateQuantity(
+                                                              cartItem.item.id,
+                                                              cartItem.quantity +
+                                                                  1,
+                                                            );
+                                                      },
+                                                padding: EdgeInsets.zero,
+                                                constraints:
+                                                    const BoxConstraints(),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () {
+                                        cartController.removeFromCart(
+                                          cartItem.item.id,
+                                        );
+                                      },
                                     ),
                                   ],
                                 ),
                               ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () {
-                                  cartController.removeFromCart(
-                                    cartItem.item.id,
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
                 Container(
                   padding: const EdgeInsets.all(16),
