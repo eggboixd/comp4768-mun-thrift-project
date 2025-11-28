@@ -213,7 +213,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           uniqueSellers.add(cartItem.item.userId);
                         }
 
-                        // Create order object
+                        // Create order object with initial progress
+                        final now = DateTime.now();
                         final order = Order(
                           buyerId: user.uid,
                           items: orderItems,
@@ -226,7 +227,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                               ? null
                               : _notesController.text.trim(),
                           status: OrderStatus.pending,
-                          createdAt: DateTime.now(),
+                          progressHistory: [
+                            OrderProgress(
+                              status: OrderStatus.pending,
+                              timestamp: now,
+                              note: 'Order placed',
+                            ),
+                          ],
+                          createdAt: now,
                         );
 
                         // Save order to Firestore

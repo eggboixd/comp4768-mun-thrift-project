@@ -192,6 +192,94 @@ class SellerOrdersScreen extends ConsumerWidget {
                               ],
                             ),
                           ],
+                          if (order.status ==
+                              order_model.OrderStatus.confirmed) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () =>
+                                    _updateOrderStatus(
+                                  context,
+                                  ref,
+                                  order,
+                                  order_model.OrderStatus.preparing,
+                                  'Started preparing order',
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple,
+                                  foregroundColor: Colors.white,
+                                ),
+                                icon: const Icon(Icons.inventory_2),
+                                label: const Text('Start Preparing'),
+                              ),
+                            ),
+                          ],
+                          if (order.status ==
+                              order_model.OrderStatus.preparing) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () =>
+                                    _updateOrderStatus(
+                                  context,
+                                  ref,
+                                  order,
+                                  order_model.OrderStatus.shipped,
+                                  'Order has been shipped',
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.indigo,
+                                  foregroundColor: Colors.white,
+                                ),
+                                icon: const Icon(Icons.local_shipping),
+                                label: const Text('Mark as Shipped'),
+                              ),
+                            ),
+                          ],
+                          if (order.status ==
+                              order_model.OrderStatus.shipped) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () =>
+                                    _updateOrderStatus(
+                                  context,
+                                  ref,
+                                  order,
+                                  order_model.OrderStatus.inDelivery,
+                                  'Order is out for delivery',
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.teal,
+                                  foregroundColor: Colors.white,
+                                ),
+                                icon: const Icon(Icons.delivery_dining),
+                                label: const Text('Out for Delivery'),
+                              ),
+                            ),
+                          ],
+                          if (order.status ==
+                              order_model.OrderStatus.inDelivery) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () =>
+                                    _updateOrderStatus(
+                                  context,
+                                  ref,
+                                  order,
+                                  order_model.OrderStatus.completed,
+                                  'Order has been delivered',
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                ),
+                                icon: const Icon(Icons.done_all),
+                                label: const Text('Mark as Delivered'),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -289,14 +377,58 @@ class SellerOrdersScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _updateOrderStatus(
+    BuildContext context,
+    WidgetRef ref,
+    order_model.Order order,
+    order_model.OrderStatus newStatus,
+    String note,
+  ) async {
+    try {
+      await ref
+          .read(firestoreServiceProvider)
+          .updateOrderStatusWithProgress(
+            order.id!,
+            newStatus,
+            note: note,
+          );
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Order updated to ${newStatus.displayName}'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update order: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   Color _getStatusColor(order_model.OrderStatus status) {
     switch (status) {
       case order_model.OrderStatus.pending:
         return Colors.orange;
       case order_model.OrderStatus.confirmed:
-        return Colors.green;
-      case order_model.OrderStatus.completed:
         return Colors.blue;
+      case order_model.OrderStatus.preparing:
+        return Colors.purple;
+      case order_model.OrderStatus.shipped:
+        return Colors.indigo;
+      case order_model.OrderStatus.inDelivery:
+        return Colors.teal;
+      case order_model.OrderStatus.completed:
+        return Colors.green;
       case order_model.OrderStatus.cancelled:
         return Colors.red;
     }
@@ -307,7 +439,13 @@ class SellerOrdersScreen extends ConsumerWidget {
       case order_model.OrderStatus.pending:
         return Icons.hourglass_empty;
       case order_model.OrderStatus.confirmed:
-        return Icons.check_circle;
+        return Icons.check_circle_outline;
+      case order_model.OrderStatus.preparing:
+        return Icons.inventory_2;
+      case order_model.OrderStatus.shipped:
+        return Icons.local_shipping;
+      case order_model.OrderStatus.inDelivery:
+        return Icons.delivery_dining;
       case order_model.OrderStatus.completed:
         return Icons.done_all;
       case order_model.OrderStatus.cancelled:

@@ -340,6 +340,18 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                   ),
                   Expanded(
                     child: RadioListTile<ItemType>(
+                      title: const Text('Trade'),
+                      value: ItemType.trade,
+                      groupValue: _selectedType,
+                      onChanged: (value) {
+                        setState(() => _selectedType = value!);
+                      },
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<ItemType>(
                       title: const Text('Sell'),
                       value: ItemType.buy,
                       groupValue: _selectedType,
