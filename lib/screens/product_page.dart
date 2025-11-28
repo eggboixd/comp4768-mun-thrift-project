@@ -261,25 +261,39 @@ class ProductPage extends ConsumerWidget {
                             onPressed: item.isSoldOut
                                 ? null
                                 : () {
-                                    final cartController = ref.read(
-                                      cartControllerProvider.notifier,
-                                    );
-                                    cartController.addToCart(item);
+                                    if (itemType == 'trade') {
+                                      // Navigate to trade offer screen
+                                      context.push(
+                                        '/trade-offer/${item.id}',
+                                        extra: {
+                                          'requestedItemTitle': item.title,
+                                          'sellerId': item.userId,
+                                        },
+                                      );
+                                    } else {
+                                      // Add to cart for free/buy items
+                                      final cartController = ref.read(
+                                        cartControllerProvider.notifier,
+                                      );
+                                      cartController.addToCart(item);
 
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          '${item.title} added to cart',
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            '${item.title} added to cart',
+                                          ),
+                                          duration: const Duration(seconds: 2),
+                                          action: SnackBarAction(
+                                            label: 'View Cart',
+                                            onPressed: () {
+                                              context.push('/cart/$itemType');
+                                            },
+                                          ),
                                         ),
-                                        duration: const Duration(seconds: 2),
-                                        action: SnackBarAction(
-                                          label: 'View Cart',
-                                          onPressed: () {
-                                            context.push('/cart/$itemType');
-                                          },
-                                        ),
-                                      ),
-                                    );
+                                      );
+                                    }
                                   },
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
