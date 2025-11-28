@@ -250,6 +250,42 @@ class FirestoreService {
     }
   }
 
+  // Update order status with progress tracking
+  Future<void> updateOrderStatusWithProgress(
+    String orderId,
+    order_model.OrderStatus newStatus, {
+    String? note,
+  }) async {
+    try {
+      // Get current order
+      final orderDoc = await _ordersCollection.doc(orderId).get();
+      if (!orderDoc.exists) {
+        throw Exception('Order not found');
+      }
+
+      final order = order_model.Order.fromFirestore(orderDoc);
+
+      // Create new progress entry
+      final newProgress = order_model.OrderProgress(
+        status: newStatus,
+        timestamp: DateTime.now(),
+        note: note,
+      );
+
+      // Add to progress history
+      final updatedHistory = [...order.progressHistory, newProgress];
+
+      // Update order
+      await _ordersCollection.doc(orderId).update({
+        'status': newStatus.name,
+        'progressHistory': updatedHistory.map((p) => p.toMap()).toList(),
+        'updatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update order status with progress: $e');
+    }
+  }
+
   // Decrease item quantity when purchased/claimed
   Future<void> decreaseItemQuantity(
     String itemId,
