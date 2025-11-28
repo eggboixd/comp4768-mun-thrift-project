@@ -270,7 +270,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         if (!mounted) return;
                         showDialog(
                           context: context,
-                          builder: (context) => AlertDialog(
+                          builder: (dialogContext) => AlertDialog(
                             title: Text(
                               isFree ? 'Claim Successful!' : 'Order Placed!',
                             ),
@@ -282,8 +282,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             actions: [
                               TextButton(
                                 onPressed: () {
-                                  Navigator.of(context).pop();
-                                  context.go('/${widget.itemType}');
+                                  Navigator.of(dialogContext).pop();
+                                  if (mounted) context.go('/${widget.itemType}');
                                 },
                                 child: const Text('OK'),
                               ),
@@ -299,7 +299,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         if (!mounted) return;
                         showDialog(
                           context: context,
-                          builder: (context) => AlertDialog(
+                          builder: (dialogContext) => AlertDialog(
                             title: const Text('Error'),
                             content: Text('Failed to place order: $e'),
                             actions: [

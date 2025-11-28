@@ -205,7 +205,10 @@ class ProfileScreen extends ConsumerWidget {
                             children: const [
                               Icon(Icons.receipt_long, size: 20),
                               SizedBox(width: 8),
-                              Text('Order History', style: TextStyle(fontSize: 14)),
+                              Text(
+                                'Order History',
+                                style: TextStyle(fontSize: 14),
+                              ),
                             ],
                           ),
                         ),

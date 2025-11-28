@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/order.dart';
 import '../services/firestore_service.dart';
 
-final orderDetailsProvider =
-    FutureProvider.family<Order?, String>((ref, orderId) async {
+final orderDetailsProvider = FutureProvider.family<Order?, String>((
+  ref,
+  orderId,
+) async {
   return await ref.read(firestoreServiceProvider).getOrderById(orderId);
 });
 
@@ -18,10 +20,7 @@ class OrderDetailsScreen extends ConsumerWidget {
     final orderAsync = ref.watch(orderDetailsProvider(orderId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order Details'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Order Details'), centerTitle: true),
       body: orderAsync.when(
         data: (order) {
           if (order == null) {
@@ -96,10 +95,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                 // Order Progress Timeline
                 const Text(
                   'Order Progress',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 _OrderProgressTimeline(order: order),
@@ -108,10 +104,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                 // Order Items
                 const Text(
                   'Order Items',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 Card(
@@ -127,18 +120,16 @@ class OrderDetailsScreen extends ConsumerWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
-                              width: 60,
-                              height: 60,
-                              color: Colors.grey[300],
-                              child: const Icon(Icons.image_not_supported),
-                            ),
+                                  width: 60,
+                                  height: 60,
+                                  color: Colors.grey[300],
+                                  child: const Icon(Icons.image_not_supported),
+                                ),
                           ),
                         ),
                         title: Text(
                           item.itemTitle,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                         subtitle: Text('Quantity: ${item.quantity}'),
                         trailing: Text(
@@ -159,10 +150,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                 // Delivery Information
                 const Text(
                   'Delivery Information',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 Card(
@@ -267,7 +255,7 @@ class OrderDetailsScreen extends ConsumerWidget {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
     return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year} at ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
@@ -344,22 +332,20 @@ class _OrderProgressTimeline extends StatelessWidget {
             // Find if we have progress history for this status
             final progressEntry = order.progressHistory.firstWhere(
               (p) => p.status == status,
-              orElse: () => OrderProgress(
-                status: status,
-                timestamp: DateTime.now(),
-              ),
+              orElse: () =>
+                  OrderProgress(status: status, timestamp: DateTime.now()),
             );
 
-            final hasProgressEntry =
-                order.progressHistory.any((p) => p.status == status);
+            final hasProgressEntry = order.progressHistory.any(
+              (p) => p.status == status,
+            );
 
             return _TimelineItem(
               status: status,
               isCompleted: isCompleted,
               isCurrent: isCurrent,
               isLast: isLast,
-              timestamp:
-                  hasProgressEntry ? progressEntry.timestamp : null,
+              timestamp: hasProgressEntry ? progressEntry.timestamp : null,
               note: progressEntry.note,
             );
           }),
@@ -436,18 +422,14 @@ class _TimelineItem extends StatelessWidget {
                     status.displayName,
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight:
-                          isCurrent ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
                       color: isCurrent ? Colors.green.shade700 : color,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     status.description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   if (timestamp != null) ...[
                     const SizedBox(height: 4),
@@ -501,10 +483,10 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: _getStatusColor(status).withOpacity(0.1),
+        color: _getStatusColor(status).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _getStatusColor(status).withOpacity(0.3),
+          color: _getStatusColor(status).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -563,10 +545,7 @@ class _InfoRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
               const SizedBox(height: 2),
               Text(

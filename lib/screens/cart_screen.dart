@@ -102,7 +102,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     children: [
                       // Filter dropdown
                       DropdownButtonFormField<CartFilter>(
-                        value: _currentFilter,
+                        initialValue: _currentFilter,
                         isExpanded: true,
                         decoration: InputDecoration(
                           labelText: 'Filter Items',
@@ -140,7 +140,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       const SizedBox(height: 12),
                       // Sort dropdown
                       DropdownButtonFormField<CartSort>(
-                        value: _currentSort,
+                        initialValue: _currentSort,
                         isExpanded: true,
                         decoration: InputDecoration(
                           labelText: 'Sort By',
@@ -345,7 +345,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
+                        color: Colors.grey.withValues(alpha: 0.3),
                         spreadRadius: 1,
                         blurRadius: 5,
                         offset: const Offset(0, -3),

@@ -197,8 +197,7 @@ class SellerOrdersScreen extends ConsumerWidget {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
-                                onPressed: () =>
-                                    _updateOrderStatus(
+                                onPressed: () => _updateOrderStatus(
                                   context,
                                   ref,
                                   order,
@@ -219,8 +218,7 @@ class SellerOrdersScreen extends ConsumerWidget {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
-                                onPressed: () =>
-                                    _updateOrderStatus(
+                                onPressed: () => _updateOrderStatus(
                                   context,
                                   ref,
                                   order,
@@ -241,8 +239,7 @@ class SellerOrdersScreen extends ConsumerWidget {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
-                                onPressed: () =>
-                                    _updateOrderStatus(
+                                onPressed: () => _updateOrderStatus(
                                   context,
                                   ref,
                                   order,
@@ -263,8 +260,7 @@ class SellerOrdersScreen extends ConsumerWidget {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
-                                onPressed: () =>
-                                    _updateOrderStatus(
+                                onPressed: () => _updateOrderStatus(
                                   context,
                                   ref,
                                   order,
@@ -387,11 +383,7 @@ class SellerOrdersScreen extends ConsumerWidget {
     try {
       await ref
           .read(firestoreServiceProvider)
-          .updateOrderStatusWithProgress(
-            order.id!,
-            newStatus,
-            note: note,
-          );
+          .updateOrderStatusWithProgress(order.id!, newStatus, note: note);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

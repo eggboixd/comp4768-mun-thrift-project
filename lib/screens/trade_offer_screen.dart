@@ -59,12 +59,14 @@ class _TradeOfferScreenState extends ConsumerState<TradeOfferScreen> {
         });
 
         if (images.length > 5 - (_selectedImages.length - images.length)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Maximum 5 images allowed'),
-              backgroundColor: Colors.orange,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Maximum 5 images allowed'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
         }
       }
     } catch (e) {
@@ -284,7 +286,7 @@ class _TradeOfferScreenState extends ConsumerState<TradeOfferScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<ItemCondition>(
-                value: _selectedCondition,
+                initialValue: _selectedCondition,
                 decoration: const InputDecoration(border: OutlineInputBorder()),
                 items: ItemCondition.values.map((condition) {
                   return DropdownMenuItem(

@@ -5,11 +5,7 @@ class OrderProgress {
   final DateTime timestamp;
   final String? note;
 
-  OrderProgress({
-    required this.status,
-    required this.timestamp,
-    this.note,
-  });
+  OrderProgress({required this.status, required this.timestamp, this.note});
 
   Map<String, dynamic> toMap() {
     return {

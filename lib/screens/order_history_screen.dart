@@ -5,8 +5,10 @@ import '../models/order.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 
-final buyerOrdersProvider =
-    StreamProvider.family<List<Order>, String>((ref, buyerId) {
+final buyerOrdersProvider = StreamProvider.family<List<Order>, String>((
+  ref,
+  buyerId,
+) {
   return ref.watch(firestoreServiceProvider).getOrdersByBuyer(buyerId);
 });
 
@@ -27,10 +29,7 @@ class OrderHistoryScreen extends ConsumerWidget {
     final ordersAsync = ref.watch(buyerOrdersProvider(user.uid));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order History'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Order History'), centerTitle: true),
       body: ordersAsync.when(
         data: (orders) {
           if (orders.isEmpty) {
@@ -38,11 +37,21 @@ class OrderHistoryScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey),
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
                   SizedBox(height: 16),
-                  Text('No orders yet', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                  Text(
+                    'No orders yet',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
                   SizedBox(height: 8),
-                  Text('Start shopping to see your orders here', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  Text(
+                    'Start shopping to see your orders here',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
                 ],
               ),
             );
@@ -102,9 +111,21 @@ class _OrderCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Order #${order.id?.substring(0, 8).toUpperCase()}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text(
+                          'Order #${order.id?.substring(0, 8).toUpperCase()}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text(_formatDateTime(order.createdAt), style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                        Text(
+                          _formatDateTime(order.createdAt),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -120,19 +141,53 @@ class _OrderCard extends StatelessWidget {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(item.itemImageUrl, width: 50, height: 50, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => Container(width: 50, height: 50, color: Colors.grey[300], child: const Icon(Icons.image_not_supported))),
+                          child: Image.network(
+                            item.itemImageUrl,
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  color: Colors.grey[300],
+                                  child: const Icon(Icons.image_not_supported),
+                                ),
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(item.itemTitle, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
-                              Text('Qty: ${item.quantity}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                              Text(
+                                item.itemTitle,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                'Qty: ${item.quantity}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                        Text(item.itemPrice == 0 ? 'Free' : '\$${(item.itemPrice * item.quantity).toStringAsFixed(2)}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                        Text(
+                          item.itemPrice == 0
+                              ? 'Free'
+                              : '\$${(item.itemPrice * item.quantity).toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -141,7 +196,14 @@ class _OrderCard extends StatelessWidget {
               if (order.items.length > 2)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text('+${order.items.length - 2} more item${order.items.length - 2 > 1 ? "s" : ""}', style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic)),
+                  child: Text(
+                    '+${order.items.length - 2} more item${order.items.length - 2 > 1 ? "s" : ""}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
                 ),
               const Divider(height: 24),
               Row(
@@ -150,9 +212,21 @@ class _OrderCard extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Total', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                      Text(
+                        'Total',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
                       const SizedBox(height: 2),
-                      Text(isFree ? 'Free' : '\$${order.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
+                      Text(
+                        isFree
+                            ? 'Free'
+                            : '\$${order.totalAmount.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
                     ],
                   ),
                   OutlinedButton.icon(
@@ -161,7 +235,12 @@ class _OrderCard extends StatelessWidget {
                     },
                     icon: const Icon(Icons.arrow_forward, size: 16),
                     label: const Text('View Details'),
-                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -173,7 +252,20 @@ class _OrderCard extends StatelessWidget {
   }
 
   String _formatDateTime(DateTime dateTime) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year}';
   }
 }
@@ -188,16 +280,30 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: _getStatusColor(status).withOpacity(0.1),
+        color: _getStatusColor(status).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _getStatusColor(status).withOpacity(0.3), width: 1),
+        border: Border.all(
+          color: _getStatusColor(status).withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(_getStatusIcon(status), size: 14, color: _getStatusColor(status)),
+          Icon(
+            _getStatusIcon(status),
+            size: 14,
+            color: _getStatusColor(status),
+          ),
           const SizedBox(width: 4),
-          Text(status.displayName, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _getStatusColor(status))),
+          Text(
+            status.displayName,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: _getStatusColor(status),
+            ),
+          ),
         ],
       ),
     );
@@ -205,25 +311,39 @@ class _StatusBadge extends StatelessWidget {
 
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pending: return Colors.orange;
-      case OrderStatus.confirmed: return Colors.blue;
-      case OrderStatus.preparing: return Colors.purple;
-      case OrderStatus.shipped: return Colors.indigo;
-      case OrderStatus.inDelivery: return Colors.teal;
-      case OrderStatus.completed: return Colors.green;
-      case OrderStatus.cancelled: return Colors.red;
+      case OrderStatus.pending:
+        return Colors.orange;
+      case OrderStatus.confirmed:
+        return Colors.blue;
+      case OrderStatus.preparing:
+        return Colors.purple;
+      case OrderStatus.shipped:
+        return Colors.indigo;
+      case OrderStatus.inDelivery:
+        return Colors.teal;
+      case OrderStatus.completed:
+        return Colors.green;
+      case OrderStatus.cancelled:
+        return Colors.red;
     }
   }
 
   IconData _getStatusIcon(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pending: return Icons.hourglass_empty;
-      case OrderStatus.confirmed: return Icons.check_circle_outline;
-      case OrderStatus.preparing: return Icons.inventory_2_outlined;
-      case OrderStatus.shipped: return Icons.local_shipping_outlined;
-      case OrderStatus.inDelivery: return Icons.delivery_dining;
-      case OrderStatus.completed: return Icons.done_all;
-      case OrderStatus.cancelled: return Icons.cancel_outlined;
+      case OrderStatus.pending:
+        return Icons.hourglass_empty;
+      case OrderStatus.confirmed:
+        return Icons.check_circle_outline;
+      case OrderStatus.preparing:
+        return Icons.inventory_2_outlined;
+      case OrderStatus.shipped:
+        return Icons.local_shipping_outlined;
+      case OrderStatus.inDelivery:
+        return Icons.delivery_dining;
+      case OrderStatus.completed:
+        return Icons.done_all;
+      case OrderStatus.cancelled:
+        return Icons.cancel_outlined;
     }
   }
 }
