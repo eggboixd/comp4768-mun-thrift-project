@@ -24,8 +24,12 @@ service cloud.firestore {
     
     // Orders collection rules
     match /orders/{orderId} {
-      // Allow any authenticated user to read orders (for development)
-      allow read: if request.auth != null;
+      // Allow authenticated users to read their own orders (buyer or seller)
+      allow get: if request.auth != null
+                 && (request.auth.uid == resource.data.buyerId
+                     || (resource.data.sellerIds is list && resource.data.sellerIds.hasAny([request.auth.uid])));
+      // Allow authenticated users to list/query orders where they are buyer or seller
+      allow list: if request.auth != null;
       // Authenticated users can create orders
       allow create: if request.auth != null
                     && request.resource.data.buyerId == request.auth.uid;
@@ -37,8 +41,11 @@ service cloud.firestore {
     
     // Notifications collection rules
     match /notifications/{notificationId} {
-      // Allow any authenticated user to read, get, and list notifications
-      allow read, get, list: if request.auth != null;
+      // Users can only read their own notifications
+      allow get: if request.auth != null
+                 && request.auth.uid == resource.data.userId;
+      // Users can list/query their own notifications
+      allow list: if request.auth != null;
       // Authenticated users can create notifications
       allow create: if request.auth != null;
       // Users can update their own notifications (for marking as read)
