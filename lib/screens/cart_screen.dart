@@ -1,18 +1,65 @@
 import 'package:comp4768_mun_thrift/controllers/cart_controller.dart';
+import 'package:comp4768_mun_thrift/models/cart_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class CartScreen extends ConsumerWidget {
+enum CartFilter { all, free, paid }
+enum CartSort { none, priceAsc, priceDesc }
+
+class CartScreen extends ConsumerStatefulWidget {
   final String itemType;
 
   const CartScreen({super.key, required this.itemType});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends ConsumerState<CartScreen> {
+  CartFilter _currentFilter = CartFilter.all;
+  CartSort _currentSort = CartSort.none;
+
+  List<CartItem> _getFilteredAndSortedCart(List<CartItem> cart) {
+    // Apply filter
+    List<CartItem> filtered = cart;
+    
+    switch (_currentFilter) {
+      case CartFilter.free:
+        filtered = cart.where((item) => (item.item.price ?? 0) == 0).toList();
+        break;
+      case CartFilter.paid:
+        filtered = cart.where((item) => (item.item.price ?? 0) > 0).toList();
+        break;
+      case CartFilter.all:
+        filtered = cart;
+        break;
+    }
+
+    // Apply sort
+    switch (_currentSort) {
+      case CartSort.priceAsc:
+        filtered.sort((a, b) => 
+          (a.item.price ?? 0).compareTo(b.item.price ?? 0));
+        break;
+      case CartSort.priceDesc:
+        filtered.sort((a, b) => 
+          (b.item.price ?? 0).compareTo(a.item.price ?? 0));
+        break;
+      case CartSort.none:
+        break;
+    }
+
+    return filtered;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final cart = ref.watch(cartControllerProvider);
     final cartController = ref.read(cartControllerProvider.notifier);
     final total = ref.watch(cartTotalProvider);
+    
+    final filteredCart = _getFilteredAndSortedCart(cart);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Shopping Cart'), centerTitle: true),
@@ -34,7 +81,7 @@ class CartScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
-                      context.go('/$itemType');
+                      context.go('/${widget.itemType}');
                     },
                     child: const Text('Continue Shopping'),
                   ),
@@ -43,12 +90,119 @@ class CartScreen extends ConsumerWidget {
             )
           : Column(
               children: [
+                // Filter and Sort UI
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  color: Colors.grey[100],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Filter dropdown
+                      DropdownButtonFormField<CartFilter>(
+                        value: _currentFilter,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: 'Filter Items',
+                          prefixIcon: const Icon(Icons.filter_list, size: 20),
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: CartFilter.all,
+                            child: Text('All Items'),
+                          ),
+                          DropdownMenuItem(
+                            value: CartFilter.free,
+                            child: Text('Free Only'),
+                          ),
+                          DropdownMenuItem(
+                            value: CartFilter.paid,
+                            child: Text('Paid Only'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _currentFilter = value;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      // Sort dropdown
+                      DropdownButtonFormField<CartSort>(
+                        value: _currentSort,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: 'Sort By',
+                          prefixIcon: const Icon(Icons.sort, size: 20),
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: CartSort.none,
+                            child: Text('Default Order'),
+                          ),
+                          DropdownMenuItem(
+                            value: CartSort.priceAsc,
+                            child: Text('Price: Low to High'),
+                          ),
+                          DropdownMenuItem(
+                            value: CartSort.priceDesc,
+                            child: Text('Price: High to Low'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _currentSort = value;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                // Cart items list
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: cart.length,
-                    itemBuilder: (context, index) {
-                      final cartItem = cart[index];
+                  child: filteredCart.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.filter_alt_off,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No items match your filter',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: filteredCart.length,
+                          itemBuilder: (context, index) {
+                            final cartItem = filteredCart[index];
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: Padding(
@@ -217,7 +371,7 @@ class CartScreen extends ConsumerWidget {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                            context.push('/checkout/$itemType');
+                            context.push('/checkout/${widget.itemType}');
                           },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
