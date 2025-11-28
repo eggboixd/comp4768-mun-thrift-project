@@ -5,6 +5,8 @@ import 'package:comp4768_mun_thrift/screens/checkout_screen.dart';
 import 'package:comp4768_mun_thrift/screens/create_listing_screen.dart';
 import 'package:comp4768_mun_thrift/screens/notifications_screen.dart';
 import 'package:comp4768_mun_thrift/screens/seller_orders_screen.dart';
+import 'package:comp4768_mun_thrift/screens/trade_offer_screen.dart';
+import 'package:comp4768_mun_thrift/screens/trade_offer_details_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/login_screen.dart';
@@ -70,6 +72,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
+      ),
+      // Trade offer routes (must come before /:type route to avoid conflicts)
+      GoRoute(
+        path: '/trade-offer/:itemId',
+        builder: (context, state) {
+          final itemId = state.pathParameters['itemId']!;
+          final extra = state.extra as Map<String, dynamic>;
+          return TradeOfferScreen(
+            requestedItemId: itemId,
+            requestedItemTitle: extra['requestedItemTitle'] as String,
+            sellerId: extra['sellerId'] as String,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/trade-offer-details/:offerId',
+        builder: (context, state) {
+          final offerId = state.pathParameters['offerId']!;
+          return TradeOfferDetailsScreen(tradeOfferId: offerId);
+        },
       ),
       // Main item list routes
       // Matched routes for /free, /trade, /buy and passes itemType to ItemListScreen
