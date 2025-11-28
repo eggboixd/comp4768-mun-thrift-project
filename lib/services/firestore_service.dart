@@ -322,6 +322,65 @@ class FirestoreService {
     }
   }
 
+  // Trade offer methods
+  CollectionReference get _tradeOffersCollection =>
+      _firestore.collection('trade-offers');
+
+  // Create trade offer
+  Future<String> createTradeOffer(dynamic tradeOffer) async {
+    try {
+      final docRef = await _tradeOffersCollection.add(tradeOffer.toMap());
+      return docRef.id;
+    } catch (e) {
+      throw Exception('Failed to create trade offer: $e');
+    }
+  }
+
+  // Get trade offers for seller
+  Stream<List<Map<String, dynamic>>> getTradeOffersForSeller(String sellerId) {
+    return _tradeOffersCollection
+        .where('sellerId', isEqualTo: sellerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return {'id': doc.id, ...data};
+          }).toList();
+        });
+  }
+
+  // Get trade offer by ID
+  Future<Map<String, dynamic>?> getTradeOfferById(String offerId) async {
+    try {
+      final doc = await _tradeOffersCollection.doc(offerId).get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        return {'id': doc.id, ...data};
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to get trade offer: $e');
+    }
+  }
+
+  // Update trade offer status
+  Future<void> updateTradeOfferStatus({
+    required String offerId,
+    required String status,
+    String? sellerResponse,
+  }) async {
+    try {
+      final updates = {'status': status, 'updatedAt': Timestamp.now()};
+      if (sellerResponse != null) {
+        updates['sellerResponse'] = sellerResponse;
+      }
+      await _tradeOffersCollection.doc(offerId).update(updates);
+    } catch (e) {
+      throw Exception('Failed to update trade offer status: $e');
+    }
+  }
+
   // Notification methods
   CollectionReference get _notificationsCollection =>
       _firestore.collection('notifications');
@@ -333,6 +392,7 @@ class FirestoreService {
     required String title,
     required String message,
     String? orderId,
+    String? tradeOfferId,
     String? fromUserId,
     String? fromUserName,
   }) async {
@@ -343,6 +403,7 @@ class FirestoreService {
         'title': title,
         'message': message,
         'orderId': orderId,
+        'tradeOfferId': tradeOfferId,
         'fromUserId': fromUserId,
         'fromUserName': fromUserName,
         'isRead': false,

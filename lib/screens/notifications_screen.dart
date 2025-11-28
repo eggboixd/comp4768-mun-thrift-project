@@ -100,8 +100,14 @@ class NotificationsScreen extends ConsumerWidget {
                           .markNotificationAsRead(notification['id'] as String);
                     }
 
-                    // Navigate to seller orders if orderId exists
-                    if (notification['orderId'] != null) {
+                    // Navigate based on notification type
+                    if (notification['tradeOfferId'] != null) {
+                      // Navigate to trade offer details
+                      context.push(
+                        '/trade-offer-details/${notification['tradeOfferId']}',
+                      );
+                    } else if (notification['orderId'] != null) {
+                      // Navigate to seller orders
                       context.push('/seller-orders');
                     }
                   },
@@ -128,6 +134,12 @@ class NotificationsScreen extends ConsumerWidget {
         return Icons.cancel;
       case 'orderCompleted':
         return Icons.done_all;
+      case 'tradeRequest':
+        return Icons.swap_horiz;
+      case 'tradeAccepted':
+        return Icons.check_circle_outline;
+      case 'tradeRejected':
+        return Icons.cancel_outlined;
       default:
         return Icons.notifications;
     }

@@ -62,5 +62,19 @@ service cloud.firestore {
       allow read, write: if request.auth != null 
                          && request.auth.uid == userId;
     }
+    
+    // Trade offers collection rules
+    match /trade-offers/{offerId} {
+      // Allow authenticated users to read trade offers
+      allow read: if request.auth != null;
+      
+      // Authenticated users can create trade offers (buyer creates offer)
+      allow create: if request.auth != null
+                    && request.resource.data.buyerId == request.auth.uid;
+      
+      // Seller can update trade offer status (accept/reject)
+      allow update: if request.auth != null 
+                    && request.auth.uid == resource.data.sellerId;
+    }
   }
 }
