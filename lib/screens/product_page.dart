@@ -332,14 +332,7 @@ class ProductPage extends ConsumerWidget {
                           width: 200,
                           child: ElevatedButton(
                             onPressed: () {
-                              // TODO: Add chat logic
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Chat functionality coming soon!',
-                                  ),
-                                ),
-                              );
+                              context.push('/chat/${item.userId}');
                             },
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
