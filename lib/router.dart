@@ -1,3 +1,4 @@
+import 'package:comp4768_mun_thrift/screens/chat_list_screen.dart';
 import 'package:comp4768_mun_thrift/screens/chat_screen.dart';
 import 'package:comp4768_mun_thrift/screens/product_page.dart';
 import 'package:comp4768_mun_thrift/screens/edit_profile_screen.dart';
@@ -161,6 +162,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return OrderDetailsScreen(orderId: orderId);
         },
       ),
+      GoRoute(path: '/chat-list', builder: (context, state) => const ChatListScreen()),
       GoRoute(
         path: '/chat/:otherUserId',
         builder: (context, state) {

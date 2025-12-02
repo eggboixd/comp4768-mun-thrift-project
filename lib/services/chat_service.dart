@@ -21,7 +21,15 @@ class ChatService {
     required String message,
   }) async {
     final chatId = _getChatId(fromUserId, toUserId);
-    await _chatsCollection.doc(chatId).collection('messages').add({
+    final chatDocRef = _chatsCollection.doc(chatId);
+    final chatDoc = await chatDocRef.get();
+    if (!chatDoc.exists) {
+      await chatDocRef.set({
+        'participants': [fromUserId, toUserId],
+      });
+    }
+
+    await chatDocRef.collection('messages').add({
       'fromUserId': fromUserId,
       'toUserId': toUserId,
       'message': message,
@@ -29,7 +37,6 @@ class ChatService {
     });
   }
 
-  // Watch messages between two users
   Stream<List<ChatMessage>> watchMessages({
     required String userA,
     required String userB,
@@ -58,6 +65,23 @@ class ChatService {
   String _getChatId(String userA, String userB) {
     final sorted = [userA, userB]..sort();
     return '${sorted[0]}_${sorted[1]}';
+  }
+
+  Future<List<String>> getChatUsers(String userId) async {
+    final querySnapshot = await _chatsCollection
+      .where('participants', arrayContains: userId)
+      .get();
+
+    final chatUsers = <String>{};
+    for (var doc in querySnapshot.docs) {
+      final participants = List<String>.from(doc['participants'] ?? []);
+      for (var participant in participants) {
+        if (participant != userId) {
+          chatUsers.add(participant);
+        }
+      }
+    }
+    return chatUsers.toList();
   }
 }
 

@@ -3,14 +3,14 @@ class ChatMessage {
   final String fromUserId;
   final String toUserId;
   final String message;
-  final DateTime timestamp;
+  final DateTime? timestamp;
 
   ChatMessage({
     required this.id,
     required this.fromUserId,
     required this.toUserId,
     required this.message,
-    required this.timestamp,
+    this.timestamp,
   });
 
   factory ChatMessage.fromMap(Map<String, dynamic> map) {
