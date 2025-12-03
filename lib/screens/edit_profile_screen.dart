@@ -189,6 +189,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
                       if (!mounted) return;
                       if (mounted) {
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Profile saved successfully!'),
@@ -199,10 +200,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       // Navigate after a brief delay
                       await Future.delayed(const Duration(milliseconds: 500));
                       if (!mounted) return;
+                      // ignore: use_build_context_synchronously
                       if (mounted) context.go('/profile');
                     } catch (e) {
                       if (!mounted) return;
                       if (mounted) {
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Error saving profile: $e')),
                         );

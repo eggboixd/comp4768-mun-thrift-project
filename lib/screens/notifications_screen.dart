@@ -104,6 +104,7 @@ class NotificationsScreen extends ConsumerWidget {
                     // ignore: use_build_context_synchronously
                     if (notification['tradeOfferId'] != null) {
                       // Navigate to trade offer details
+                      // ignore: use_build_context_synchronously
                       context.push(
                         '/trade-offer-details/${notification['tradeOfferId']}',
                       );
@@ -111,6 +112,11 @@ class NotificationsScreen extends ConsumerWidget {
                       // Navigate to seller orders
                       // ignore: use_build_context_synchronously
                       context.push('/seller-orders');
+                    } else if (notification['type'] == 'chatMessage' &&
+                        notification['fromUserId'] != null) {
+                      // Navigate to chat for messages
+                      // ignore: use_build_context_synchronously
+                      context.push('/chat/${notification['fromUserId']}');
                     }
                   },
                 ),
@@ -142,6 +148,8 @@ class NotificationsScreen extends ConsumerWidget {
         return Icons.check_circle_outline;
       case 'tradeRejected':
         return Icons.cancel_outlined;
+      case 'chatMessage':
+        return Icons.message;
       default:
         return Icons.notifications;
     }
