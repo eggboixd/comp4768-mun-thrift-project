@@ -311,8 +311,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                       label: const Text('Free'),
                       selected: _selectedType == ItemType.free,
                       onSelected: (selected) {
-                        if (selected)
+                        if (selected) {
                           setState(() => _selectedType = ItemType.free);
+                        }
                       },
                     ),
                   ),
@@ -322,8 +323,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                       label: const Text('Trade'),
                       selected: _selectedType == ItemType.trade,
                       onSelected: (selected) {
-                        if (selected)
+                        if (selected) {
                           setState(() => _selectedType = ItemType.trade);
+                        }
                       },
                     ),
                   ),
@@ -333,8 +335,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                       label: const Text('Sell'),
                       selected: _selectedType == ItemType.buy,
                       onSelected: (selected) {
-                        if (selected)
+                        if (selected) {
                           setState(() => _selectedType = ItemType.buy);
+                        }
                       },
                     ),
                   ),

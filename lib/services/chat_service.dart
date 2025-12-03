@@ -15,7 +15,7 @@ class ChatService {
   CollectionReference get _chatsCollection => _firestore.collection('chats');
 
   // Send a message between two users
-  Future<void> sendMessage({
+  Future<bool> sendMessage({
     required String fromUserId,
     required String toUserId,
     required String message,
@@ -23,10 +23,20 @@ class ChatService {
     final chatId = _getChatId(fromUserId, toUserId);
     final chatDocRef = _chatsCollection.doc(chatId);
     final chatDoc = await chatDocRef.get();
+    bool isNewChat = false;
     if (!chatDoc.exists) {
       await chatDocRef.set({
         'participants': [fromUserId, toUserId],
       });
+      isNewChat = true;
+    } else {
+      final msgSnapshot = await chatDocRef
+          .collection('messages')
+          .limit(1)
+          .get();
+      if (msgSnapshot.docs.isEmpty) {
+        isNewChat = true;
+      }
     }
 
     await chatDocRef.collection('messages').add({
@@ -35,6 +45,8 @@ class ChatService {
       'message': message,
       'timestamp': FieldValue.serverTimestamp(),
     });
+
+    return isNewChat;
   }
 
   Stream<List<ChatMessage>> watchMessages({

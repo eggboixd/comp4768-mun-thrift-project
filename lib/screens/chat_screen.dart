@@ -1,4 +1,5 @@
 import 'package:comp4768_mun_thrift/services/chat_service.dart';
+import '../services/firestore_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -40,6 +41,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final messagesAsync = ref.watch(
       chatMessagesProvider((userId, otherUserId)),
     );
+    final currentUserInfoAsync = ref.watch(userInfoControllerProvider(userId));
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -241,13 +243,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       onSubmitted: (_) async {
                         final userMessage = _controller.text.trim();
                         if (userMessage.isNotEmpty) {
-                          await ref
+                          final isNewChat = await ref
                               .read(chatServiceProvider)
                               .sendMessage(
                                 fromUserId: userId,
                                 toUserId: otherUserId,
                                 message: userMessage,
                               );
+                          if (isNewChat) {
+                            final senderName =
+                                currentUserInfoAsync.value?.name ??
+                                user.displayName ??
+                                '';
+                            await ref
+                                .read(firestoreServiceProvider)
+                                .createNotification(
+                                  userId: otherUserId,
+                                  type: 'chatMessage',
+                                  title: 'New Message',
+                                  message: userMessage,
+                                  fromUserId: userId,
+                                  fromUserName: senderName,
+                                );
+                          }
                           _controller.clear();
                         }
                       },
@@ -272,13 +290,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     onPressed: () async {
                       final userMessage = _controller.text.trim();
                       if (userMessage.isNotEmpty) {
-                        await ref
+                        final isNewChat = await ref
                             .read(chatServiceProvider)
                             .sendMessage(
                               fromUserId: userId,
                               toUserId: otherUserId,
                               message: userMessage,
                             );
+                        if (isNewChat) {
+                          final senderName =
+                              currentUserInfoAsync.value?.name ??
+                              user.displayName ??
+                              '';
+                          await ref
+                              .read(firestoreServiceProvider)
+                              .createNotification(
+                                userId: otherUserId,
+                                type: 'chatMessage',
+                                title: 'New Message',
+                                message: userMessage,
+                                fromUserId: userId,
+                                fromUserName: senderName,
+                              );
+                        }
                         _controller.clear();
                       }
                     },
