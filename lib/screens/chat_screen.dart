@@ -51,7 +51,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: otherUserInfoAsync.when(
               data: (userInfo) => userInfo != null
                   ? InkWell(
-                      onTap: () => context.push('/profile/${otherUserId}'),
+                      onTap: () =>
+                          context.push('/profile/external/$otherUserId'),
                       child: Row(
                         children: [
                           IconButton(
@@ -127,7 +128,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withAlpha(25),
                     blurRadius: 8,
                     offset: const Offset(0, -2),
                   ),
@@ -172,7 +173,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.03),
+                                      color: Colors.black.withAlpha(7),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
@@ -220,7 +221,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color: Colors.black.withAlpha(7),
                           blurRadius: 6,
                           offset: Offset(0, 2),
                         ),

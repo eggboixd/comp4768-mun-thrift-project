@@ -125,8 +125,9 @@ class ProductPage extends ConsumerWidget {
                               final profileImage =
                                   sellerInfo?.profileImageUrl ?? '';
                               return InkWell(
-                                onTap: () =>
-                                    context.push('/profile/${item.userId}'),
+                                onTap: () => context.push(
+                                  '/profile/external/${item.userId}',
+                                ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [

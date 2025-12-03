@@ -264,11 +264,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
                         // Close loading dialog
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         Navigator.of(context).pop();
 
                         // Show success dialog
                         if (!mounted) return;
                         showDialog(
+                          // ignore: use_build_context_synchronously
                           context: context,
                           builder: (dialogContext) => AlertDialog(
                             title: Text(
@@ -283,8 +285,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                               TextButton(
                                 onPressed: () {
                                   Navigator.of(dialogContext).pop();
-                                  if (mounted)
+                                  if (mounted) {
                                     context.go('/${widget.itemType}');
+                                  }
                                 },
                                 child: const Text('OK'),
                               ),
@@ -294,11 +297,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       } catch (e) {
                         // Close loading dialog
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         Navigator.of(context).pop();
 
                         // Show error dialog
                         if (!mounted) return;
                         showDialog(
+                          // ignore: use_build_context_synchronously
                           context: context,
                           builder: (dialogContext) => AlertDialog(
                             title: const Text('Error'),

@@ -104,6 +104,7 @@ class NotificationsScreen extends ConsumerWidget {
                     // ignore: use_build_context_synchronously
                     if (notification['tradeOfferId'] != null) {
                       // Navigate to trade offer details
+                      // ignore: use_build_context_synchronously
                       context.push(
                         '/trade-offer-details/${notification['tradeOfferId']}',
                       );

@@ -6,7 +6,7 @@ import '../services/chat_service.dart';
 import '../services/auth_service.dart';
 
 class ChatListScreen extends ConsumerWidget {
-  const ChatListScreen({Key? key}) : super(key: key);
+  const ChatListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

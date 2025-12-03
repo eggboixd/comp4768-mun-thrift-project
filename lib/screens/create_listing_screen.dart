@@ -307,53 +307,35 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: InkWell(
-                      onTap: () =>
-                          setState(() => _selectedType = ItemType.free),
-                      child: Row(
-                        children: [
-                          Radio<ItemType>(
-                            value: ItemType.free,
-                            groupValue: _selectedType,
-                            onChanged: (value) =>
-                                setState(() => _selectedType = value!),
-                          ),
-                          const Text('Free'),
-                        ],
-                      ),
+                    child: ChoiceChip(
+                      label: const Text('Free'),
+                      selected: _selectedType == ItemType.free,
+                      onSelected: (selected) {
+                        if (selected)
+                          setState(() => _selectedType = ItemType.free);
+                      },
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: InkWell(
-                      onTap: () =>
-                          setState(() => _selectedType = ItemType.trade),
-                      child: Row(
-                        children: [
-                          Radio<ItemType>(
-                            value: ItemType.trade,
-                            groupValue: _selectedType,
-                            onChanged: (value) =>
-                                setState(() => _selectedType = value!),
-                          ),
-                          const Text('Trade'),
-                        ],
-                      ),
+                    child: ChoiceChip(
+                      label: const Text('Trade'),
+                      selected: _selectedType == ItemType.trade,
+                      onSelected: (selected) {
+                        if (selected)
+                          setState(() => _selectedType = ItemType.trade);
+                      },
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: InkWell(
-                      onTap: () => setState(() => _selectedType = ItemType.buy),
-                      child: Row(
-                        children: [
-                          Radio<ItemType>(
-                            value: ItemType.buy,
-                            groupValue: _selectedType,
-                            onChanged: (value) =>
-                                setState(() => _selectedType = value!),
-                          ),
-                          const Text('Sell'),
-                        ],
-                      ),
+                    child: ChoiceChip(
+                      label: const Text('Sell'),
+                      selected: _selectedType == ItemType.buy,
+                      onSelected: (selected) {
+                        if (selected)
+                          setState(() => _selectedType = ItemType.buy);
+                      },
                     ),
                   ),
                 ],

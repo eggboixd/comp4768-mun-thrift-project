@@ -136,19 +136,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
-        path: '/profile/:userId',
-        builder: (context, state) {
-          final userId = state.pathParameters['userId']!;
-          return ExternalProfileScreen(userId: userId);
-        },
-      ),
-      GoRoute(
         path: '/profile/edit',
         builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         path: '/profile/create-listing',
         builder: (context, state) => const CreateListingScreen(),
+      ),
+      GoRoute(
+        path: '/profile/external/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return ExternalProfileScreen(userId: userId);
+        },
       ),
       // Notifications and orders
       GoRoute(
