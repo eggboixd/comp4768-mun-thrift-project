@@ -1,5 +1,6 @@
 import 'package:comp4768_mun_thrift/screens/chat_list_screen.dart';
 import 'package:comp4768_mun_thrift/screens/chat_screen.dart';
+import 'package:comp4768_mun_thrift/screens/external_profile_screen.dart';
 import 'package:comp4768_mun_thrift/screens/product_page.dart';
 import 'package:comp4768_mun_thrift/screens/edit_profile_screen.dart';
 import 'package:comp4768_mun_thrift/screens/cart_screen.dart';
@@ -135,6 +136,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
+        path: '/profile/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return ExternalProfileScreen(userId: userId);
+        },
+      ),
+      GoRoute(
         path: '/profile/edit',
         builder: (context, state) => const EditProfileScreen(),
       ),
@@ -162,7 +170,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           return OrderDetailsScreen(orderId: orderId);
         },
       ),
-      GoRoute(path: '/chat-list', builder: (context, state) => const ChatListScreen()),
+      GoRoute(
+        path: '/chat-list',
+        builder: (context, state) => const ChatListScreen(),
+      ),
       GoRoute(
         path: '/chat/:otherUserId',
         builder: (context, state) {

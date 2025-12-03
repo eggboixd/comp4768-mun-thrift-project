@@ -3,47 +3,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/item.dart';
-import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import 'bottom_nav_bar.dart';
 
-class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({super.key});
+class ExternalProfileScreen extends ConsumerWidget {
+  final String userId;
+
+  const ExternalProfileScreen({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authStateChangesProvider).value;
-
-    if (user == null) {
-      return const Scaffold(body: Center(child: Text('No user logged in')));
-    }
-
-    final userInfoAsync = ref.watch(userInfoControllerProvider(user.uid));
-
-    final userItemsAsync = ref.watch(userItemsProvider(user.uid));
+    final userInfoAsync = ref.watch(userInfoControllerProvider(userId));
+    final userItemsAsync = ref.watch(userItemsProvider(userId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: () async {
-              await ref.read(authServiceProvider).signOut();
-              if (context.mounted) {
-                context.go('/login');
-              }
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Profile')),
       body: SingleChildScrollView(
         child: Column(
           children: [
             // User Info Card
             userInfoAsync.when(
-              loading: () => const CircularProgressIndicator(),
+              loading: () => const Padding(
+                padding: EdgeInsets.all(24.0),
+                child: CircularProgressIndicator(),
+              ),
               error: (error, stack) => Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
@@ -53,16 +36,17 @@ class ProfileScreen extends ConsumerWidget {
               ),
               data: (userInfo) {
                 if (userInfo == null) {
-                  // Redirect to edit profile if userInfo is null
-                  // Use WidgetsBinding to ensure navigation happens after build
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (context.mounted) {
-                      context.go('/profile/edit');
-                    }
-                  });
-                  return Container();
+                  return Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      children: const [
+                        Icon(Icons.person_outline, size: 72),
+                        SizedBox(height: 12),
+                        Text('User not found', style: TextStyle(fontSize: 18)),
+                      ],
+                    ),
+                  );
                 }
-
                 return Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
@@ -75,7 +59,9 @@ class ProfileScreen extends ConsumerWidget {
                     children: [
                       CircleAvatar(
                         radius: 50,
-                        backgroundImage: NetworkImage(userInfo.profileImageUrl),
+                        backgroundImage: userInfo.profileImageUrl.isEmpty
+                            ? null
+                            : NetworkImage(userInfo.profileImageUrl),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -86,47 +72,17 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                       if (userInfo.about != null) ...[
+                        const SizedBox(height: 8),
                         Text(
                           userInfo.about!,
-                          style: TextStyle(fontSize: 14),
+                          style: const TextStyle(fontSize: 14),
                           textAlign: TextAlign.center,
                         ),
                       ],
+                      const SizedBox(height: 8),
                       Text(
                         'Address: ${userInfo.address}',
                         style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Email: ${user.email ?? 'Unknown'}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                      Text(
-                        'Member since ${_formatDate(user.metadata.creationTime)}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: 200,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            context.push('/profile/edit');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(Icons.edit),
-                              SizedBox(width: 12),
-                              Text('Edit Profile'),
-                            ],
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 12),
                       Row(
@@ -135,7 +91,7 @@ class ProfileScreen extends ConsumerWidget {
                           Expanded(
                             child: OutlinedButton(
                               onPressed: () {
-                                context.push('/notifications');
+                                context.push('/chat/$userId');
                               },
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
@@ -148,108 +104,28 @@ class ProfileScreen extends ConsumerWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: const [
-                                  Icon(Icons.notifications, size: 20),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'Notifications',
-                                    style: TextStyle(fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                context.push('/seller-orders');
-                              },
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Icon(Icons.shopping_bag, size: 20),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'My Sales',
-                                    style: TextStyle(fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                context.push('/chat-list');
-                              },
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Icon(Icons.chat, size: 20),
-                                  SizedBox(width: 4),
-                                  Text('Chats', style: TextStyle(fontSize: 13)),
+                                  Icon(Icons.chat),
+                                  SizedBox(width: 8),
+                                  Text('Message'),
                                 ],
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            context.push('/order-history');
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(Icons.receipt_long, size: 20),
-                              SizedBox(width: 8),
-                              Text(
-                                'Order History',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 );
               },
             ),
-            // My Listings Section
+            // Listings Section
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'My Listings',
+                    'Listings',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
@@ -276,7 +152,7 @@ class ProfileScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Start by adding your first item!',
+                                  "This user hasn't added any listings yet.",
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey[500],
@@ -288,14 +164,12 @@ class ProfileScreen extends ConsumerWidget {
                         );
                       }
 
-                      // Filter only available items
                       final availableItems = items
-                          .where((item) => item.isAvailable)
+                          .where((i) => i.isAvailable)
                           .toList();
 
                       return Column(
                         children: [
-                          // Stats Row
                           Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8.0,
@@ -336,7 +210,6 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 24),
 
-                          // Items Grid
                           if (availableItems.isEmpty)
                             Center(
                               child: Padding(
@@ -485,7 +358,7 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Error loading your items',
+                              'Error loading this user\'s items',
                               style: TextStyle(
                                 fontSize: 18,
                                 color: Colors.grey[600],
@@ -511,20 +384,8 @@ class ProfileScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          context.push('/profile/create-listing');
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('List Item'),
-      ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 3),
     );
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'Unknown';
-    return '${date.month}/${date.day}/${date.year}';
   }
 }
 

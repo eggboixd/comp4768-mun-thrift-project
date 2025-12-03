@@ -43,22 +43,19 @@ class ChatService {
   }) {
     final chatId = _getChatId(userA, userB);
     return _chatsCollection
-      .doc(chatId)
-      .collection('messages')
-      .orderBy('timestamp', descending: true)
-      .snapshots()
-      .map((snapshot) {
-        if (snapshot.docs.isEmpty) {
-          return <ChatMessage>[];
-        }
-        return snapshot.docs.map((doc) {
-          final data = doc.data();
-          return ChatMessage.fromMap({
-            'id': doc.id,
-            ...data,
-          });
-        }).toList();
-      });
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          if (snapshot.docs.isEmpty) {
+            return <ChatMessage>[];
+          }
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            return ChatMessage.fromMap({'id': doc.id, ...data});
+          }).toList();
+        });
   }
 
   // Helper to generate a unique chat id for two users
@@ -69,8 +66,8 @@ class ChatService {
 
   Future<List<String>> getChatUsers(String userId) async {
     final querySnapshot = await _chatsCollection
-      .where('participants', arrayContains: userId)
-      .get();
+        .where('participants', arrayContains: userId)
+        .get();
 
     final chatUsers = <String>{};
     for (var doc in querySnapshot.docs) {
@@ -91,7 +88,8 @@ final chatServiceProvider = Provider<ChatService>((ref) {
 });
 
 // Provider to watch messages between two users
-final chatMessagesProvider = StreamProvider.family<List<ChatMessage>, (String, String)>((ref, userIds) {
-  final chatService = ref.watch(chatServiceProvider);
-  return chatService.watchMessages(userA: userIds.$1, userB: userIds.$2);
-});
+final chatMessagesProvider =
+    StreamProvider.family<List<ChatMessage>, (String, String)>((ref, userIds) {
+      final chatService = ref.watch(chatServiceProvider);
+      return chatService.watchMessages(userA: userIds.$1, userB: userIds.$2);
+    });

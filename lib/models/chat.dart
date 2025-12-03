@@ -20,10 +20,10 @@ class ChatMessage {
       toUserId: map['toUserId'] ?? '',
       message: map['message'] ?? '',
       timestamp: map['timestamp'] != null
-        ? (map['timestamp'] is DateTime
-          ? map['timestamp']
-          : (map['timestamp'] as dynamic).toDate())
-        : null,
+          ? (map['timestamp'] is DateTime
+                ? map['timestamp']
+                : (map['timestamp'] as dynamic).toDate())
+          : null,
     );
   }
 

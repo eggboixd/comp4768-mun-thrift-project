@@ -1,5 +1,6 @@
 import 'package:comp4768_mun_thrift/controllers/cart_controller.dart';
 import 'package:comp4768_mun_thrift/controllers/item_controller.dart';
+import 'package:comp4768_mun_thrift/controllers/user_info_controller.dart';
 import 'package:comp4768_mun_thrift/screens/bottom_nav_bar.dart';
 import 'package:comp4768_mun_thrift/services/auth_service.dart';
 import 'package:comp4768_mun_thrift/services/firestore_service.dart';
@@ -112,13 +113,47 @@ class ProductPage extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 36),
-                      Text(
-                        // TODO: Change to user display name when available and add profile picture
-                        item.userId,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                        ),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final sellerInfoAsync = ref.watch(
+                            userInfoControllerProvider(item.userId),
+                          );
+                          return sellerInfoAsync.when(
+                            data: (sellerInfo) {
+                              final displayName =
+                                  sellerInfo?.name ?? item.userId;
+                              final profileImage =
+                                  sellerInfo?.profileImageUrl ?? '';
+                              return InkWell(
+                                onTap: () =>
+                                    context.push('/profile/${item.userId}'),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (profileImage.isNotEmpty) ...[
+                                      CircleAvatar(
+                                        radius: 12,
+                                        backgroundImage: NetworkImage(
+                                          profileImage,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+                                    Text(
+                                      displayName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            loading: () => const SizedBox.shrink(),
+                            error: (e, st) => Text(item.userId),
+                          );
+                        },
                       ),
                       const SizedBox(height: 36),
                       Text(
