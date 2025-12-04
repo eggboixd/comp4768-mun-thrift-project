@@ -7,7 +7,6 @@ import 'package:comp4768_mun_thrift/services/auth_service.dart';
 class CartController extends StateNotifier<List<CartItem>> {
   final CartService _cartService;
   final String? _userId;
-  
 
   CartController(this._cartService, this._userId) : super([]) {
     _loadCart();
