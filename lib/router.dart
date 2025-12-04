@@ -1,3 +1,6 @@
+import 'package:comp4768_mun_thrift/screens/chat_list_screen.dart';
+import 'package:comp4768_mun_thrift/screens/chat_screen.dart';
+import 'package:comp4768_mun_thrift/screens/external_profile_screen.dart';
 import 'package:comp4768_mun_thrift/screens/product_page.dart';
 import 'package:comp4768_mun_thrift/screens/edit_profile_screen.dart';
 import 'package:comp4768_mun_thrift/screens/cart_screen.dart';
@@ -12,6 +15,7 @@ import 'package:comp4768_mun_thrift/screens/order_details_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/login_screen.dart';
+import 'screens/search_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/item_list_screen.dart';
 import 'screens/profile_screen.dart';
@@ -42,8 +46,12 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // If logged in and on login/signup pages, check user info
       if (isLoggedIn && isLoggingIn) {
-        // If user info is not loaded or missing required fields, redirect to /profile/edit
-        final userInfo = userInfoAsync?.value;
+        // If we don't have user info yet (still loading or not watched), don't redirect yet.
+        // Only redirect when we've loaded user info and determined setup is needed.
+        if (userInfoAsync == null || !userInfoAsync.hasValue) {
+          return null;
+        }
+        final userInfo = userInfoAsync.value;
         final needsSetup =
             userInfo == null ||
             userInfo.name.isEmpty ||
@@ -56,7 +64,11 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // If logged in and user info not set up, force to /profile/edit
       if (isLoggedIn && state.matchedLocation != '/profile/edit') {
-        final userInfo = userInfoAsync?.value;
+        // If we don't have user info yet, skip redirect (userInfo is still loading)
+        if (userInfoAsync == null || !userInfoAsync.hasValue) {
+          return null;
+        }
+        final userInfo = userInfoAsync.value;
         final needsSetup =
             userInfo == null ||
             userInfo.name.isEmpty ||
@@ -105,6 +117,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/search',
+        builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
         path: '/product/:type(free|trade|buy)/:id',
         builder: (context, state) {
           final type = state.pathParameters['type'] ?? 'free';
@@ -140,6 +156,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profile/create-listing',
         builder: (context, state) => const CreateListingScreen(),
       ),
+      GoRoute(
+        path: '/profile/create-listing/edit/:itemId',
+        builder: (context, state) {
+          final itemId = state.pathParameters['itemId']!;
+          return CreateListingScreen(editItemId: itemId);
+        },
+      ),
+      GoRoute(
+        path: '/profile/external/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return ExternalProfileScreen(userId: userId);
+        },
+      ),
       // Notifications and orders
       GoRoute(
         path: '/notifications',
@@ -158,6 +188,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final orderId = state.pathParameters['orderId']!;
           return OrderDetailsScreen(orderId: orderId);
+        },
+      ),
+      GoRoute(
+        path: '/chat-list',
+        builder: (context, state) => const ChatListScreen(),
+      ),
+      GoRoute(
+        path: '/chat/:otherUserId',
+        builder: (context, state) {
+          final otherUserId = state.pathParameters['otherUserId']!;
+          return ChatScreen(otherUserId: otherUserId);
         },
       ),
     ],

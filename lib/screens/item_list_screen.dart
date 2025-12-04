@@ -20,6 +20,13 @@ class ItemListScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('MUN Thrift'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Search',
+            onPressed: () {
+              context.push('/search');
+            },
+          ),
           Stack(
             children: [
               IconButton(

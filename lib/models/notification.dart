@@ -7,7 +7,8 @@ enum NotificationType {
   orderCompleted,
   tradeRequest,
   tradeAccepted,
-  tradeRejected;
+  tradeRejected,
+  chatMessage;
 
   String get displayName {
     switch (this) {
@@ -25,6 +26,8 @@ enum NotificationType {
         return 'Trade Accepted';
       case NotificationType.tradeRejected:
         return 'Trade Rejected';
+      case NotificationType.chatMessage:
+        return 'New Message';
     }
   }
 }

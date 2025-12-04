@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:comp4768_mun_thrift/controllers/item_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,11 +10,21 @@ import '../services/firestore_service.dart';
 import '../services/storage_service.dart';
 
 class CreateListingScreen extends ConsumerStatefulWidget {
-  const CreateListingScreen({super.key});
+  const CreateListingScreen({super.key, this.editItemId});
+
+  final String? editItemId;
 
   @override
   ConsumerState<CreateListingScreen> createState() =>
       _CreateListingScreenState();
+}
+
+class _ListingImage {
+  final Uint8List bytes;
+  final String? url;
+  final bool isNew;
+
+  _ListingImage({required this.bytes, this.url, this.isNew = false});
 }
 
 class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
@@ -26,7 +37,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
   ItemType _selectedType = ItemType.free;
   ItemCondition _selectedCondition = ItemCondition.good;
-  final List<Uint8List> _imageBytesList = [];
+  // Track current images shown in the UI. For existing images we store the
+  // original URL and downloaded bytes; for new images, url is null and
+  // isNew=true.
+  final List<_ListingImage> _images = [];
+  Item? _originalItem;
   bool _isLoading = false;
 
   final ImagePicker _picker = ImagePicker();
@@ -35,6 +50,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   void initState() {
     super.initState();
     _checkAuthentication();
+    if (widget.editItemId != null) {
+      _loadExistingItem();
+    }
   }
 
   Future<void> _checkAuthentication() async {
@@ -45,6 +63,39 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
           const SnackBar(content: Text('Please sign in to create a listing')),
         );
         context.go('/auth');
+      }
+    }
+  }
+
+  Future<void> _loadExistingItem() async {
+    final item = await ref.read(firestoreServiceProvider).getItemById(widget.editItemId!);
+    if (item != null) {
+      setState(() {
+        _originalItem = item;
+        _titleController.text = item.title;
+        _descriptionController.text = item.description;
+        _selectedType = item.type;
+        if (item.price != null) {
+          _priceController.text = item.price.toString();
+        }
+        _selectedCondition = item.condition;
+        _categoryController.text = item.category ?? '';
+        _quantityController.text = item.quantity.toString();
+      });
+
+      // Load images and preserve their original URLs
+      for (int i = 0; i < item.imageUrls.length; i++) {
+        final imageUrl = item.imageUrls[i];
+        final bytes = await ref.read(storageServiceProvider).downloadImage(imageUrl);
+        if (bytes != null && mounted) {
+          setState(() {
+            final insertIndex = i <= _images.length ? i : _images.length;
+            _images.insert(
+              insertIndex,
+              _ListingImage(bytes: bytes, url: imageUrl, isNew: false),
+            );
+          });
+        }
       }
     }
   }
@@ -60,24 +111,48 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   Future<void> _pickImages() async {
-    try {
-      // Check if we can add more images
-      if (_imageBytesList.length >= 5) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Maximum 5 images allowed'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-        return;
+    if (_images.length >= 5) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Maximum 5 images allowed'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
       }
+      return;
+    }
 
-      // Use pickImage for web compatibility
+    // Show bottom sheet for source selection
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Camera'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null) return;
+
+    try {
       final XFile? pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         maxWidth: 1920,
         maxHeight: 1920,
         imageQuality: 85,
@@ -87,13 +162,13 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         final bytes = await pickedFile.readAsBytes();
 
         setState(() {
-          _imageBytesList.add(bytes);
+          _images.add(_ListingImage(bytes: bytes, url: null, isNew: true));
         });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Image added (${_imageBytesList.length}/5)'),
+              content: Text('Image added (${_images.length}/5)'),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 1),
             ),
@@ -115,14 +190,14 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
   void _removeImage(int index) {
     setState(() {
-      _imageBytesList.removeAt(index);
+      _images.removeAt(index);
     });
   }
 
   Future<void> _submitListing() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_imageBytesList.isEmpty) {
+    if (_images.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please add at least one image'),
@@ -144,33 +219,43 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       // Ensure auth token is fresh before uploading to Storage
       await user.getIdToken(true);
 
-      // Generate a temporary item ID
-      final tempItemId = DateTime.now().millisecondsSinceEpoch.toString();
-
-      // Upload images with error handling
+      // Storage + Firestore services
       final storageService = ref.read(storageServiceProvider);
-      final List<String> imageUrls = [];
+      final firestoreService = ref.read(firestoreServiceProvider);
 
-      for (int i = 0; i < _imageBytesList.length; i++) {
-        try {
-          final path = storageService.generateItemImagePath(
-            user.uid,
-            tempItemId,
-            i,
-          );
-          final url = await storageService.uploadImageBytes(
-            _imageBytesList[i],
-            path,
-          );
-          imageUrls.add(url);
-        } catch (e) {
-          throw Exception('Failed to upload image ${i + 1}: $e');
-        }
+      // For creating a new item, use a temp ID for storage paths
+      final tempItemId =
+          widget.editItemId ?? DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Build lists of existing images kept (original URLs) and new images
+      final List<String> keptOriginalUrls = _images
+          .where((img) => img.url != null && !img.isNew)
+          .map((img) => img.url!)
+          .toList();
+
+      final List<_ListingImage> newImages = _images
+          .where((img) => img.isNew)
+          .toList();
+
+      final List<String> newUploadedUrls = [];
+      for (int i = 0; i < newImages.length; i++) {
+        final path = storageService.generateItemImagePath(
+          user.uid,
+          tempItemId,
+          i,
+        );
+        final url = await storageService.uploadImageBytes(
+          newImages[i].bytes,
+          path,
+        );
+        newUploadedUrls.add(url);
       }
 
-      // Create item
+      final List<String> imageUrls = [...keptOriginalUrls, ...newUploadedUrls];
+
+      // Create or update item
       final item = Item(
-        id: '', // Will be set by Firestore
+        id: widget.editItemId ?? '', // Will be set by Firestore on add
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         type: _selectedType,
@@ -190,25 +275,77 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         quantity: int.tryParse(_quantityController.text) ?? 1,
       );
 
-      // Add to Firestore
-      final firestoreService = ref.read(firestoreServiceProvider);
-      await firestoreService.addItem(item);
+      if (widget.editItemId == null) {
+        // Create new
+        await firestoreService.addItem(item);
+      } else {
+        // Update existing - compute which original images were removed
+        final originalUrls = _originalItem?.imageUrls ?? [];
+        final removedOriginalUrls = originalUrls
+            .where((url) => !keptOriginalUrls.contains(url))
+            .toList();
+
+        // Update Firestore document
+        final updates = {
+          'title': item.title,
+          'description': item.description,
+          'type': item.type.name,
+          'price': item.price,
+          'imageUrls': imageUrls,
+          'condition': item.condition.name,
+          'category': item.category,
+          'quantity': item.quantity,
+        };
+
+        await firestoreService.updateItem(widget.editItemId!, updates);
+
+        // After successful update, delete removed images from Storage
+        try {
+          for (final url in removedOriginalUrls) {
+            await storageService.deleteImage(url);
+          }
+        } catch (e) {
+          // Not critical continue
+        }
+      }
+
+      // Clear item cache after create or update and refresh item provider
+      try {
+        final allItemsController = ref.read(
+          allItemsControllerProvider.notifier,
+        );
+        await allItemsController.clearCache();
+        // Refresh the single-item provider if we updated an existing item so
+        // any open product detail page reflecting that item will reload.
+        if (widget.editItemId != null) {
+          ref.invalidate(itemByIdControllerProvider(widget.editItemId!));
+        }
+      } catch (_) {}
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Item listed successfully!'),
+          SnackBar(
+            content: Text(
+              widget.editItemId == null
+                  ? 'Item listed successfully!'
+                  : 'Item updated successfully!',
+            ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
+        // Navigate back to profile screen
         context.go('/profile');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error creating listing: ${e.toString()}'),
+            content: Text(
+              widget.editItemId == null
+                  ? 'Error creating listing: ${e.toString()}'
+                  : 'Failed to update listing: $e',
+            ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
@@ -224,7 +361,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Listing')),
+      appBar: AppBar(
+        title: Text(
+          widget.editItemId == null ? 'Create Listing' : 'Edit Listing',
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -244,7 +385,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                   scrollDirection: Axis.horizontal,
                   children: [
                     // Add image button
-                    if (_imageBytesList.length < 5)
+                    if (_images.length < 5)
                       GestureDetector(
                         onTap: _pickImages,
                         child: Container(
@@ -268,7 +409,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                                 style: TextStyle(color: Colors.grey[600]),
                               ),
                               Text(
-                                '(${_imageBytesList.length}/5)',
+                                '(${_images.length}/5)',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[500],
@@ -279,9 +420,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                         ),
                       ),
                     // Display selected images
-                    ..._imageBytesList.asMap().entries.map((entry) {
+                    ..._images.asMap().entries.map((entry) {
                       final index = entry.key;
-                      final imageBytes = entry.value;
+                      final listingImage = entry.value;
                       return Stack(
                         children: [
                           Container(
@@ -290,7 +431,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
                               image: DecorationImage(
-                                image: MemoryImage(imageBytes),
+                                image: MemoryImage(listingImage.bytes),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -331,53 +472,38 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: InkWell(
-                      onTap: () =>
-                          setState(() => _selectedType = ItemType.free),
-                      child: Row(
-                        children: [
-                          Radio<ItemType>(
-                            value: ItemType.free,
-                            groupValue: _selectedType,
-                            onChanged: (value) =>
-                                setState(() => _selectedType = value!),
-                          ),
-                          const Text('Free'),
-                        ],
-                      ),
+                    child: ChoiceChip(
+                      label: const Text('Free'),
+                      selected: _selectedType == ItemType.free,
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() => _selectedType = ItemType.free);
+                        }
+                      },
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: InkWell(
-                      onTap: () =>
-                          setState(() => _selectedType = ItemType.trade),
-                      child: Row(
-                        children: [
-                          Radio<ItemType>(
-                            value: ItemType.trade,
-                            groupValue: _selectedType,
-                            onChanged: (value) =>
-                                setState(() => _selectedType = value!),
-                          ),
-                          const Text('Trade'),
-                        ],
-                      ),
+                    child: ChoiceChip(
+                      label: const Text('Trade'),
+                      selected: _selectedType == ItemType.trade,
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() => _selectedType = ItemType.trade);
+                        }
+                      },
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: InkWell(
-                      onTap: () => setState(() => _selectedType = ItemType.buy),
-                      child: Row(
-                        children: [
-                          Radio<ItemType>(
-                            value: ItemType.buy,
-                            groupValue: _selectedType,
-                            onChanged: (value) =>
-                                setState(() => _selectedType = value!),
-                          ),
-                          const Text('Sell'),
-                        ],
-                      ),
+                    child: ChoiceChip(
+                      label: const Text('Sell'),
+                      selected: _selectedType == ItemType.buy,
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() => _selectedType = ItemType.buy);
+                        }
+                      },
                     ),
                   ),
                 ],
@@ -470,7 +596,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
               // Condition dropdown
               DropdownButtonFormField<ItemCondition>(
-                initialValue: _selectedCondition,
+                value: _selectedCondition,
                 decoration: const InputDecoration(
                   labelText: 'Condition',
                   border: OutlineInputBorder(),
@@ -482,7 +608,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() => _selectedCondition = value!);
+                  if (value != null) {
+                    setState(() => _selectedCondition = value);
+                  }
                 },
               ),
               const SizedBox(height: 16),
@@ -513,7 +641,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('List Item', style: TextStyle(fontSize: 16)),
+                    : Text(
+                        widget.editItemId == null ? 'List Item' : 'Update Item',
+                        style: const TextStyle(fontSize: 16),
+                      ),
               ),
             ],
           ),

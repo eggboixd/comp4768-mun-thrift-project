@@ -1,5 +1,6 @@
 import 'package:comp4768_mun_thrift/controllers/cart_controller.dart';
 import 'package:comp4768_mun_thrift/controllers/item_controller.dart';
+import 'package:comp4768_mun_thrift/controllers/user_info_controller.dart';
 import 'package:comp4768_mun_thrift/screens/bottom_nav_bar.dart';
 import 'package:comp4768_mun_thrift/services/auth_service.dart';
 import 'package:comp4768_mun_thrift/services/firestore_service.dart';
@@ -7,15 +8,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class ProductPage extends ConsumerWidget {
+class ProductPage extends ConsumerStatefulWidget {
   final String id;
   final String itemType;
 
   const ProductPage({super.key, required this.id, required this.itemType});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final itemAsync = ref.watch(itemByIdControllerProvider(id));
+  ConsumerState<ProductPage> createState() => _ProductPageState();
+}
+
+class _ProductPageState extends ConsumerState<ProductPage> {
+  late final PageController _pageController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
+    final itemAsync = ref.watch(itemByIdControllerProvider(widget.id));
     final currentUser = ref.watch(authStateChangesProvider).value;
 
     return Scaffold(
@@ -32,24 +54,123 @@ class ProductPage extends ConsumerWidget {
           return SingleChildScrollView(
             child: Column(
               children: [
+                // Image carousel
                 SizedBox(
                   width: double.infinity,
                   height: 250,
-                  child: Image.network(
-                    item.primaryImageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[300],
-                        child: const Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            size: 50,
-                            color: Colors.grey,
+                  child: Stack(
+                    children: [
+                      PageView.builder(
+                        controller: _pageController,
+                        itemCount: item.imageUrls.isNotEmpty
+                            ? item.imageUrls.length
+                            : 1,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _currentPage = index;
+                          });
+                        },
+                        itemBuilder: (context, index) {
+                          final url =
+                              (item.imageUrls.isNotEmpty
+                                      ? item.imageUrls[index]
+                                      : item.primaryImageUrl)
+                                  .toString();
+                          return Image.network(
+                            url,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[300],
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      // Previous + Next buttons
+                      if (item.imageUrls.length > 1) ...[
+                        Positioned(
+                          left: 8,
+                          top: 8,
+                          child: IconButton(
+                            tooltip: 'Previous',
+                            onPressed: () {
+                              final count = item.imageUrls.length;
+                              if (count <= 1) return;
+                              final prevIndex =
+                                  (_currentPage - 1 + count) % count;
+                              if (_pageController.hasClients) {
+                                _pageController.animateToPage(
+                                  prevIndex,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.arrow_back_ios,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                      );
-                    },
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: IconButton(
+                            tooltip: 'Next',
+                            onPressed: () {
+                              final count = item.imageUrls.length;
+                              if (count <= 1) return;
+                              final nextIndex = (_currentPage + 1) % count;
+                              if (_pageController.hasClients) {
+                                _pageController.animateToPage(
+                                  nextIndex,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        // Page indicators
+                        Positioned(
+                          bottom: 8,
+                          left: 0,
+                          right: 0,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              item.imageUrls.length,
+                              (i) => Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                width: _currentPage == i ? 10 : 6,
+                                height: _currentPage == i ? 10 : 6,
+                                decoration: BoxDecoration(
+                                  color: _currentPage == i
+                                      ? Colors.white
+                                      : Colors.white54,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 Padding(
@@ -112,13 +233,48 @@ class ProductPage extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 36),
-                      Text(
-                        // TODO: Change to user display name when available and add profile picture
-                        item.userId,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                        ),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final sellerInfoAsync = ref.watch(
+                            userInfoControllerProvider(item.userId),
+                          );
+                          return sellerInfoAsync.when(
+                            data: (sellerInfo) {
+                              final displayName =
+                                  sellerInfo?.name ?? item.userId;
+                              final profileImage =
+                                  sellerInfo?.profileImageUrl ?? '';
+                              return InkWell(
+                                onTap: () => context.push(
+                                  '/profile/external/${item.userId}',
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (profileImage.isNotEmpty) ...[
+                                      CircleAvatar(
+                                        radius: 12,
+                                        backgroundImage: NetworkImage(
+                                          profileImage,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+                                    Text(
+                                      displayName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            loading: () => const SizedBox.shrink(),
+                            error: (e, st) => Text(item.userId),
+                          );
+                        },
                       ),
                       const SizedBox(height: 36),
                       Text(
@@ -151,13 +307,8 @@ class ProductPage extends ConsumerWidget {
                           width: 200,
                           child: ElevatedButton(
                             onPressed: () {
-                              // TODO: Navigate to edit screen when implemented
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Edit functionality coming soon!',
-                                  ),
-                                ),
+                              context.push(
+                                '/profile/create-listing/edit/${item.id}',
                               );
                             },
                             style: ElevatedButton.styleFrom(
@@ -261,7 +412,7 @@ class ProductPage extends ConsumerWidget {
                             onPressed: item.isSoldOut
                                 ? null
                                 : () {
-                                    if (itemType == 'trade') {
+                                    if (widget.itemType == 'trade') {
                                       // Navigate to trade offer screen
                                       context.push(
                                         '/trade-offer/${item.id}',
@@ -288,7 +439,9 @@ class ProductPage extends ConsumerWidget {
                                           action: SnackBarAction(
                                             label: 'View Cart',
                                             onPressed: () {
-                                              context.push('/cart/$itemType');
+                                              context.push(
+                                                '/cart/${widget.itemType}',
+                                              );
                                             },
                                           ),
                                         ),
@@ -307,9 +460,9 @@ class ProductPage extends ConsumerWidget {
                                 Icon(
                                   item.isSoldOut
                                       ? Icons.block
-                                      : itemType == 'free'
+                                      : widget.itemType == 'free'
                                       ? Icons.add_shopping_cart
-                                      : itemType == 'trade'
+                                      : widget.itemType == 'trade'
                                       ? Icons.swap_horiz
                                       : Icons.add_shopping_cart,
                                 ),
@@ -317,9 +470,9 @@ class ProductPage extends ConsumerWidget {
                                 Text(
                                   item.isSoldOut
                                       ? 'Sold Out'
-                                      : itemType == 'free'
+                                      : widget.itemType == 'free'
                                       ? 'Add to Cart'
-                                      : itemType == 'trade'
+                                      : widget.itemType == 'trade'
                                       ? 'Trade'
                                       : 'Add to Cart',
                                 ),
@@ -332,14 +485,7 @@ class ProductPage extends ConsumerWidget {
                           width: 200,
                           child: ElevatedButton(
                             onPressed: () {
-                              // TODO: Add chat logic
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Chat functionality coming soon!',
-                                  ),
-                                ),
-                              );
+                              context.push('/chat/${item.userId}');
                             },
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -370,9 +516,9 @@ class ProductPage extends ConsumerWidget {
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
       bottomNavigationBar: BottomNavBar(
-        currentIndex: itemType == 'free'
+        currentIndex: widget.itemType == 'free'
             ? 0
-            : itemType == 'trade'
+            : widget.itemType == 'trade'
             ? 1
             : 2,
       ),
