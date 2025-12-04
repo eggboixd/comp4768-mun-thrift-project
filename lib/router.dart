@@ -156,10 +156,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profile/create-listing',
         builder: (context, state) => const CreateListingScreen(),
       ),
-      GoRoute(path: '/profile/create-listing/edit/:itemId', builder: (context, state) {
-        final itemId = state.pathParameters['itemId']!;
-        return CreateListingScreen(editItemId: itemId);
-      }),
+      GoRoute(
+        path: '/profile/create-listing/edit/:itemId',
+        builder: (context, state) {
+          final itemId = state.pathParameters['itemId']!;
+          return CreateListingScreen(editItemId: itemId);
+        },
+      ),
       GoRoute(
         path: '/profile/external/:userId',
         builder: (context, state) {

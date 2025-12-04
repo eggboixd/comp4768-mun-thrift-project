@@ -50,7 +50,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   void initState() {
     super.initState();
     if (widget.editItemId != null) {
-      ref.read(firestoreServiceProvider).getItemById(widget.editItemId!).then((item) {
+      ref.read(firestoreServiceProvider).getItemById(widget.editItemId!).then((
+        item,
+      ) {
         if (item != null) {
           setState(() {
             _originalItem = item;
@@ -68,7 +70,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
           // Load images and preserve their original URLs
           for (int i = 0; i < item.imageUrls.length; i++) {
             final imageUrl = item.imageUrls[i];
-            ref.read(storageServiceProvider).downloadImage(imageUrl).then((bytes) {
+            ref.read(storageServiceProvider).downloadImage(imageUrl).then((
+              bytes,
+            ) {
               if (bytes != null) {
                 setState(() {
                   final insertIndex = i <= _images.length ? i : _images.length;
@@ -207,8 +211,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       final firestoreService = ref.read(firestoreServiceProvider);
 
       // For creating a new item, use a temp ID for storage paths
-      final tempItemId = widget.editItemId ??
-          DateTime.now().millisecondsSinceEpoch.toString();
+      final tempItemId =
+          widget.editItemId ?? DateTime.now().millisecondsSinceEpoch.toString();
 
       // Build lists of existing images kept (original URLs) and new images
       final List<String> keptOriginalUrls = _images
@@ -216,8 +220,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
           .map((img) => img.url!)
           .toList();
 
-      final List<_ListingImage> newImages =
-          _images.where((img) => img.isNew).toList();
+      final List<_ListingImage> newImages = _images
+          .where((img) => img.isNew)
+          .toList();
 
       final List<String> newUploadedUrls = [];
       for (int i = 0; i < newImages.length; i++) {
@@ -293,7 +298,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
       // Clear item cache after create or update and refresh item provider
       try {
-        final allItemsController = ref.read(allItemsControllerProvider.notifier);
+        final allItemsController = ref.read(
+          allItemsControllerProvider.notifier,
+        );
         await allItemsController.clearCache();
         // Refresh the single-item provider if we updated an existing item so
         // any open product detail page reflecting that item will reload.
@@ -305,9 +312,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.editItemId == null
-                ? 'Item listed successfully!'
-                : 'Item updated successfully!'),
+            content: Text(
+              widget.editItemId == null
+                  ? 'Item listed successfully!'
+                  : 'Item updated successfully!',
+            ),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 3),
           ),
@@ -319,9 +328,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.editItemId == null
-                ? 'Failed to create listing: $e'
-                : 'Failed to update listing: $e'),
+            content: Text(
+              widget.editItemId == null
+                  ? 'Failed to create listing: $e'
+                  : 'Failed to update listing: $e',
+            ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
@@ -338,7 +349,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.editItemId == null ? 'Create Listing' : 'Edit Listing'),
+        title: Text(
+          widget.editItemId == null ? 'Create Listing' : 'Edit Listing',
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

@@ -74,12 +74,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Search'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {},
-          )
-        ],
+        actions: [IconButton(icon: const Icon(Icons.search), onPressed: () {})],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -124,9 +119,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   hint: const Text('All'),
                   items: [
                     const DropdownMenuItem(value: null, child: Text('All')),
-                    DropdownMenuItem(value: ItemType.free, child: Text(ItemType.free.displayName)),
-                    DropdownMenuItem(value: ItemType.trade, child: Text(ItemType.trade.displayName)),
-                    DropdownMenuItem(value: ItemType.buy, child: Text(ItemType.buy.displayName)),
+                    DropdownMenuItem(
+                      value: ItemType.free,
+                      child: Text(ItemType.free.displayName),
+                    ),
+                    DropdownMenuItem(
+                      value: ItemType.trade,
+                      child: Text(ItemType.trade.displayName),
+                    ),
+                    DropdownMenuItem(
+                      value: ItemType.buy,
+                      child: Text(ItemType.buy.displayName),
+                    ),
                   ],
                   onChanged: (val) {
                     setState(() {
@@ -136,7 +140,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       _performSearch(_controller.text.trim());
                     }
                   },
-                )
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -144,67 +148,84 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _query.trim().isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
-                              const SizedBox(height: 12),
-                              const Text('Search for items'),
-                            ],
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 64,
+                            color: Colors.grey[400],
                           ),
-                        )
-                      : _results.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
-                                  const SizedBox(height: 12),
-                                  const Text('No items found matching your search'),
-                                ],
+                          const SizedBox(height: 12),
+                          const Text('Search for items'),
+                        ],
+                      ),
+                    )
+                  : _results.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.inbox_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 12),
+                          const Text('No items found matching your search'),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(8.0),
+                      itemCount: (_results.length / 2).ceil(),
+                      itemBuilder: (context, rowIndex) {
+                        final firstIndex = rowIndex * 2;
+                        final secondIndex = firstIndex + 1;
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: ListItem(
+                                image: NetworkImage(
+                                  _results[firstIndex].primaryImageUrl,
+                                ),
+                                itemName: _results[firstIndex].title,
+                                price: _results[firstIndex].price,
+                                onTap: () {
+                                  final type = _results[firstIndex].type.name;
+                                  context.push(
+                                    '/product/$type/${_results[firstIndex].id}',
+                                  );
+                                },
                               ),
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.all(8.0),
-                              itemCount: (_results.length / 2).ceil(),
-                              itemBuilder: (context, rowIndex) {
-                                final firstIndex = rowIndex * 2;
-                                final secondIndex = firstIndex + 1;
-                                return Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: ListItem(
-                                        image: NetworkImage(_results[firstIndex].primaryImageUrl),
-                                        itemName: _results[firstIndex].title,
-                                        price: _results[firstIndex].price,
-                                        onTap: () {
-                                          final type = _results[firstIndex].type.name;
-                                          context.push('/product/$type/${_results[firstIndex].id}');
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    if (secondIndex < _results.length)
-                                      Expanded(
-                                        child: ListItem(
-                                          image: NetworkImage(_results[secondIndex].primaryImageUrl),
-                                          itemName: _results[secondIndex].title,
-                                          price: _results[secondIndex].price,
-                                          onTap: () {
-                                            final type = _results[secondIndex].type.name;
-                                            context.push('/product/$type/${_results[secondIndex].id}');
-                                          },
-                                        ),
-                                      )
-                                    else
-                                      const Expanded(child: SizedBox()),
-                                  ],
-                                );
-                              },
                             ),
-            )
+                            const SizedBox(width: 12),
+                            if (secondIndex < _results.length)
+                              Expanded(
+                                child: ListItem(
+                                  image: NetworkImage(
+                                    _results[secondIndex].primaryImageUrl,
+                                  ),
+                                  itemName: _results[secondIndex].title,
+                                  price: _results[secondIndex].price,
+                                  onTap: () {
+                                    final type =
+                                        _results[secondIndex].type.name;
+                                    context.push(
+                                      '/product/$type/${_results[secondIndex].id}',
+                                    );
+                                  },
+                                ),
+                              )
+                            else
+                              const Expanded(child: SizedBox()),
+                          ],
+                        );
+                      },
+                    ),
+            ),
           ],
         ),
       ),

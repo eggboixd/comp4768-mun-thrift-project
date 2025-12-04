@@ -172,7 +172,7 @@ class ItemByIdController extends StateNotifier<AsyncValue<Item?>> {
   StreamSubscription? _subscription;
 
   ItemByIdController(this._firestoreService)
-      : super(const AsyncValue.loading());
+    : super(const AsyncValue.loading());
 
   Future<void> loadItemById(String itemId) async {
     // Cancel any previous subscription
@@ -180,12 +180,14 @@ class ItemByIdController extends StateNotifier<AsyncValue<Item?>> {
     state = const AsyncValue.loading();
 
     try {
-      _subscription = _firestoreService.getItemStream(itemId).listen(
-        (item) => state = AsyncValue.data(item),
-        onError: (error, stackTrace) {
-          state = AsyncValue.error(error, stackTrace);
-        },
-      );
+      _subscription = _firestoreService
+          .getItemStream(itemId)
+          .listen(
+            (item) => state = AsyncValue.data(item),
+            onError: (error, stackTrace) {
+              state = AsyncValue.error(error, stackTrace);
+            },
+          );
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
     }
