@@ -32,6 +32,24 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   final ImagePicker _picker = ImagePicker();
 
   @override
+  void initState() {
+    super.initState();
+    _checkAuthentication();
+  }
+
+  Future<void> _checkAuthentication() async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please sign in to create a listing')),
+        );
+        context.go('/auth');
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
@@ -119,7 +137,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
     try {
       final user = ref.read(currentUserProvider);
-      if (user == null) throw Exception('User not authenticated');
+      if (user == null) {
+        throw Exception('User not authenticated. Please sign in again.');
+      }
 
       // Ensure auth token is fresh before uploading to Storage
       await user.getIdToken(true);
@@ -127,21 +147,25 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       // Generate a temporary item ID
       final tempItemId = DateTime.now().millisecondsSinceEpoch.toString();
 
-      // Upload images
+      // Upload images with error handling
       final storageService = ref.read(storageServiceProvider);
       final List<String> imageUrls = [];
 
       for (int i = 0; i < _imageBytesList.length; i++) {
-        final path = storageService.generateItemImagePath(
-          user.uid,
-          tempItemId,
-          i,
-        );
-        final url = await storageService.uploadImageBytes(
-          _imageBytesList[i],
-          path,
-        );
-        imageUrls.add(url);
+        try {
+          final path = storageService.generateItemImagePath(
+            user.uid,
+            tempItemId,
+            i,
+          );
+          final url = await storageService.uploadImageBytes(
+            _imageBytesList[i],
+            path,
+          );
+          imageUrls.add(url);
+        } catch (e) {
+          throw Exception('Failed to upload image ${i + 1}: $e');
+        }
       }
 
       // Create item
@@ -184,7 +208,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create listing: $e'),
+            content: Text('Error creating listing: ${e.toString()}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
