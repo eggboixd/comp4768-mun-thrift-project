@@ -49,43 +49,54 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   @override
   void initState() {
     super.initState();
+    _checkAuthentication();
     if (widget.editItemId != null) {
-      ref.read(firestoreServiceProvider).getItemById(widget.editItemId!).then((
-        item,
-      ) {
-        if (item != null) {
-          setState(() {
-            _originalItem = item;
-            _titleController.text = item.title;
-            _descriptionController.text = item.description;
-            _selectedType = item.type;
-            if (item.price != null) {
-              _priceController.text = item.price.toString();
-            }
-            _selectedCondition = item.condition;
-            _categoryController.text = item.category ?? '';
-            _quantityController.text = item.quantity.toString();
-          });
+      _loadExistingItem();
+    }
+  }
 
-          // Load images and preserve their original URLs
-          for (int i = 0; i < item.imageUrls.length; i++) {
-            final imageUrl = item.imageUrls[i];
-            ref.read(storageServiceProvider).downloadImage(imageUrl).then((
-              bytes,
-            ) {
-              if (bytes != null) {
-                setState(() {
-                  final insertIndex = i <= _images.length ? i : _images.length;
-                  _images.insert(
-                    insertIndex,
-                    _ListingImage(bytes: bytes, url: imageUrl, isNew: false),
-                  );
-                });
-              }
-            });
-          }
+  Future<void> _checkAuthentication() async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please sign in to create a listing')),
+        );
+        context.go('/auth');
+      }
+    }
+  }
+
+  Future<void> _loadExistingItem() async {
+    final item = await ref.read(firestoreServiceProvider).getItemById(widget.editItemId!);
+    if (item != null) {
+      setState(() {
+        _originalItem = item;
+        _titleController.text = item.title;
+        _descriptionController.text = item.description;
+        _selectedType = item.type;
+        if (item.price != null) {
+          _priceController.text = item.price.toString();
         }
+        _selectedCondition = item.condition;
+        _categoryController.text = item.category ?? '';
+        _quantityController.text = item.quantity.toString();
       });
+
+      // Load images and preserve their original URLs
+      for (int i = 0; i < item.imageUrls.length; i++) {
+        final imageUrl = item.imageUrls[i];
+        final bytes = await ref.read(storageServiceProvider).downloadImage(imageUrl);
+        if (bytes != null && mounted) {
+          setState(() {
+            final insertIndex = i <= _images.length ? i : _images.length;
+            _images.insert(
+              insertIndex,
+              _ListingImage(bytes: bytes, url: imageUrl, isNew: false),
+            );
+          });
+        }
+      }
     }
   }
 
@@ -201,7 +212,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
     try {
       final user = ref.read(currentUserProvider);
-      if (user == null) throw Exception('User not authenticated');
+      if (user == null) {
+        throw Exception('User not authenticated. Please sign in again.');
+      }
 
       // Ensure auth token is fresh before uploading to Storage
       await user.getIdToken(true);
@@ -318,7 +331,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                   : 'Item updated successfully!',
             ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
         // Navigate back to profile screen
@@ -330,7 +343,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
           SnackBar(
             content: Text(
               widget.editItemId == null
-                  ? 'Failed to create listing: $e'
+                  ? 'Error creating listing: ${e.toString()}'
                   : 'Failed to update listing: $e',
             ),
             backgroundColor: Colors.red,
@@ -583,7 +596,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
               // Condition dropdown
               DropdownButtonFormField<ItemCondition>(
-                initialValue: _selectedCondition,
+                value: _selectedCondition,
                 decoration: const InputDecoration(
                   labelText: 'Condition',
                   border: OutlineInputBorder(),
@@ -595,7 +608,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() => _selectedCondition = value!);
+                  if (value != null) {
+                    setState(() => _selectedCondition = value);
+                  }
                 },
               ),
               const SizedBox(height: 16),
@@ -626,7 +641,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('List Item', style: TextStyle(fontSize: 16)),
+                    : Text(
+                        widget.editItemId == null ? 'List Item' : 'Update Item',
+                        style: const TextStyle(fontSize: 16),
+                      ),
               ),
             ],
           ),
