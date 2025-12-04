@@ -48,25 +48,58 @@ jobs:
     - name: Install Flutter dependencies
       run: flutter pub get  # Same command you run locally
     
-    # Step 5: Decode Keystore File and Setup Signing Properties 🔒
-    # This step is REQUIRED for Firebase App Distribution (unsigned APKs are rejected)
-    - name: Decode Keystore and Setup Signing
+    # Step 5: Generate or Decode Keystore File 🔒
+    - name: Setup Keystore
       env:
         KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: |
-        # Decode the base64-encoded keystore file
-        echo $KEYSTORE_BASE64 | base64 --decode > android/app/release.jks
+        # Check if KEYSTORE_BASE64 secret exists
+        if [ -n "$KEYSTORE_BASE64" ]; then
+          echo "Using existing keystore from secrets..."
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+        else
+          echo "⚠️ No keystore found in secrets. Generating a new one..."
+          echo "⚠️ THIS IS FOR TESTING ONLY - You should save this keystore for production!"
+          
+          # Generate a new keystore
+          keytool -genkey -v \
+            -keystore android/app/upload-keystore.jks \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -alias upload \
+            -storepass android \
+            -keypass android \
+            -dname "CN=MUN Thrift, OU=Development, O=MUN, L=St. Johns, S=NL, C=CA"
+          
+          echo ""
+          echo "📋 IMPORTANT: Add these to your GitHub Secrets for future builds:"
+          echo "1. KEYSTORE_BASE64: (run this locally after downloading the keystore)"
+          echo "   base64 -w 0 android/app/upload-keystore.jks"
+          echo "2. KEYSTORE_PASSWORD: android"
+          echo "3. KEY_ALIAS: upload"
+          echo "4. KEY_PASSWORD: android"
+          
+          # Encode and display the keystore (for you to copy to secrets)
+          echo ""
+          echo "🔑 Base64 Encoded Keystore (copy this to KEYSTORE_BASE64 secret):"
+          base64 -w 0 android/app/upload-keystore.jks
+          echo ""
+        fi
+        
         # Create key.properties file for signing configuration
-        echo "storeFile=release.jks" > android/key.properties
-        echo "keyAlias=$KEY_ALIAS" >> android/key.properties
-        echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
-        echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
-        # Move key.properties to the correct location
-        mv android/key.properties android/app/key.properties
-        echo "Signing configuration files created."
+        STORE_PASS="${KEYSTORE_PASSWORD:-android}"
+        KEY_PASS="${KEY_PASSWORD:-android}"
+        ALIAS="${KEY_ALIAS:-upload}"
+        
+        echo "storeFile=upload-keystore.jks" > android/app/key.properties
+        echo "keyAlias=$ALIAS" >> android/app/key.properties
+        echo "storePassword=$STORE_PASS" >> android/app/key.properties
+        echo "keyPassword=$KEY_PASS" >> android/app/key.properties
+        echo "✅ Signing configuration files created."
     
     # Step 6: Build the actual Android APK file (SIGNED)
     - name: Build Android Release APK
@@ -103,7 +136,7 @@ jobs:
 # 3. Downloads your code
 # 4. Installs Java and Flutter
 # 5. Downloads your app's dependencies
-# 6. Decodes your keystore and sets up signing configuration
+# 6. Either decodes existing keystore OR generates a new one automatically
 # 7. Builds your Flutter app into a SIGNED Android APK
 # 8. Installs Firebase tools
 # 9. Uploads the SIGNED APK to Firebase App Distribution
