@@ -48,6 +48,16 @@ class StorageService {
     }
   }
 
+  Future<Uint8List?> downloadImage(String imageUrl) async {
+    try {
+      final ref = _storage.refFromURL(imageUrl);
+      final data = await ref.getData();
+      return data;
+    } catch (e) {
+      throw Exception('Failed to download image: $e');
+    }
+  }
+
   // Delete image by URL
   Future<void> deleteImage(String imageUrl) async {
     try {

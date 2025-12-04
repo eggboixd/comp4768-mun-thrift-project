@@ -307,13 +307,8 @@ class _ProductPageState extends ConsumerState<ProductPage> {
                           width: 200,
                           child: ElevatedButton(
                             onPressed: () {
-                              // TODO: Navigate to edit screen when implemented
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Edit functionality coming soon!',
-                                  ),
-                                ),
+                              context.push(
+                                '/profile/create-listing/edit/${item.id}',
                               );
                             },
                             style: ElevatedButton.styleFrom(

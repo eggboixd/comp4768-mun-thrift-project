@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:comp4768_mun_thrift/controllers/item_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,11 +10,21 @@ import '../services/firestore_service.dart';
 import '../services/storage_service.dart';
 
 class CreateListingScreen extends ConsumerStatefulWidget {
-  const CreateListingScreen({super.key});
+  const CreateListingScreen({super.key, this.editItemId});
+
+  final String? editItemId;
 
   @override
   ConsumerState<CreateListingScreen> createState() =>
       _CreateListingScreenState();
+}
+
+class _ListingImage {
+  final Uint8List bytes;
+  final String? url;
+  final bool isNew;
+
+  _ListingImage({required this.bytes, this.url, this.isNew = false});
 }
 
 class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
@@ -26,10 +37,53 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
   ItemType _selectedType = ItemType.free;
   ItemCondition _selectedCondition = ItemCondition.good;
-  final List<Uint8List> _imageBytesList = [];
+  // Track current images shown in the UI. For existing images we store the
+  // original URL and downloaded bytes; for new images, url is null and
+  // isNew=true.
+  final List<_ListingImage> _images = [];
+  Item? _originalItem;
   bool _isLoading = false;
 
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.editItemId != null) {
+      ref.read(firestoreServiceProvider).getItemById(widget.editItemId!).then((item) {
+        if (item != null) {
+          setState(() {
+            _originalItem = item;
+            _titleController.text = item.title;
+            _descriptionController.text = item.description;
+            _selectedType = item.type;
+            if (item.price != null) {
+              _priceController.text = item.price.toString();
+            }
+            _selectedCondition = item.condition;
+            _categoryController.text = item.category ?? '';
+            _quantityController.text = item.quantity.toString();
+          });
+
+          // Load images and preserve their original URLs
+          for (int i = 0; i < item.imageUrls.length; i++) {
+            final imageUrl = item.imageUrls[i];
+            ref.read(storageServiceProvider).downloadImage(imageUrl).then((bytes) {
+              if (bytes != null) {
+                setState(() {
+                  final insertIndex = i <= _images.length ? i : _images.length;
+                  _images.insert(
+                    insertIndex,
+                    _ListingImage(bytes: bytes, url: imageUrl, isNew: false),
+                  );
+                });
+              }
+            });
+          }
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -42,7 +96,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   Future<void> _pickImages() async {
-    if (_imageBytesList.length >= 5) {
+    if (_images.length >= 5) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -93,13 +147,13 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         final bytes = await pickedFile.readAsBytes();
 
         setState(() {
-          _imageBytesList.add(bytes);
+          _images.add(_ListingImage(bytes: bytes, url: null, isNew: true));
         });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Image added (${_imageBytesList.length}/5)'),
+              content: Text('Image added (${_images.length}/5)'),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 1),
             ),
@@ -121,14 +175,14 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
   void _removeImage(int index) {
     setState(() {
-      _imageBytesList.removeAt(index);
+      _images.removeAt(index);
     });
   }
 
   Future<void> _submitListing() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_imageBytesList.isEmpty) {
+    if (_images.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please add at least one image'),
@@ -148,29 +202,42 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       // Ensure auth token is fresh before uploading to Storage
       await user.getIdToken(true);
 
-      // Generate a temporary item ID
-      final tempItemId = DateTime.now().millisecondsSinceEpoch.toString();
-
-      // Upload images
+      // Storage + Firestore services
       final storageService = ref.read(storageServiceProvider);
-      final List<String> imageUrls = [];
+      final firestoreService = ref.read(firestoreServiceProvider);
 
-      for (int i = 0; i < _imageBytesList.length; i++) {
+      // For creating a new item, use a temp ID for storage paths
+      final tempItemId = widget.editItemId ??
+          DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Build lists of existing images kept (original URLs) and new images
+      final List<String> keptOriginalUrls = _images
+          .where((img) => img.url != null && !img.isNew)
+          .map((img) => img.url!)
+          .toList();
+
+      final List<_ListingImage> newImages =
+          _images.where((img) => img.isNew).toList();
+
+      final List<String> newUploadedUrls = [];
+      for (int i = 0; i < newImages.length; i++) {
         final path = storageService.generateItemImagePath(
           user.uid,
           tempItemId,
           i,
         );
         final url = await storageService.uploadImageBytes(
-          _imageBytesList[i],
+          newImages[i].bytes,
           path,
         );
-        imageUrls.add(url);
+        newUploadedUrls.add(url);
       }
 
-      // Create item
+      final List<String> imageUrls = [...keptOriginalUrls, ...newUploadedUrls];
+
+      // Create or update item
       final item = Item(
-        id: '', // Will be set by Firestore
+        id: widget.editItemId ?? '', // Will be set by Firestore on add
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         type: _selectedType,
@@ -190,25 +257,69 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         quantity: int.tryParse(_quantityController.text) ?? 1,
       );
 
-      // Add to Firestore
-      final firestoreService = ref.read(firestoreServiceProvider);
-      await firestoreService.addItem(item);
+      if (widget.editItemId == null) {
+        // Create new
+        await firestoreService.addItem(item);
+      } else {
+        // Update existing - compute which original images were removed
+        final originalUrls = _originalItem?.imageUrls ?? [];
+        final removedOriginalUrls = originalUrls
+            .where((url) => !keptOriginalUrls.contains(url))
+            .toList();
+
+        // Update Firestore document
+        final updates = {
+          'title': item.title,
+          'description': item.description,
+          'type': item.type.name,
+          'price': item.price,
+          'imageUrls': imageUrls,
+          'condition': item.condition.name,
+          'category': item.category,
+          'quantity': item.quantity,
+        };
+
+        await firestoreService.updateItem(widget.editItemId!, updates);
+
+        // After successful update, delete removed images from Storage
+        try {
+          for (final url in removedOriginalUrls) {
+            await storageService.deleteImage(url);
+          }
+        } catch (e) {}
+      }
+
+      // Clear item cache after create or update and refresh item provider
+      try {
+        final allItemsController = ref.read(allItemsControllerProvider.notifier);
+        await allItemsController.clearCache();
+        // Refresh the single-item provider if we updated an existing item so
+        // any open product detail page reflecting that item will reload.
+        if (widget.editItemId != null) {
+          ref.invalidate(itemByIdControllerProvider(widget.editItemId!));
+        }
+      } catch (_) {}
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Item listed successfully!'),
+          SnackBar(
+            content: Text(widget.editItemId == null
+                ? 'Item listed successfully!'
+                : 'Item updated successfully!'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 3),
           ),
         );
+        // Navigate back to profile screen
         context.go('/profile');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create listing: $e'),
+            content: Text(widget.editItemId == null
+                ? 'Failed to create listing: $e'
+                : 'Failed to update listing: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
@@ -224,7 +335,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Listing')),
+      appBar: AppBar(
+        title: Text(widget.editItemId == null ? 'Create Listing' : 'Edit Listing'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -244,7 +357,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                   scrollDirection: Axis.horizontal,
                   children: [
                     // Add image button
-                    if (_imageBytesList.length < 5)
+                    if (_images.length < 5)
                       GestureDetector(
                         onTap: _pickImages,
                         child: Container(
@@ -268,7 +381,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                                 style: TextStyle(color: Colors.grey[600]),
                               ),
                               Text(
-                                '(${_imageBytesList.length}/5)',
+                                '(${_images.length}/5)',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[500],
@@ -279,9 +392,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                         ),
                       ),
                     // Display selected images
-                    ..._imageBytesList.asMap().entries.map((entry) {
+                    ..._images.asMap().entries.map((entry) {
                       final index = entry.key;
-                      final imageBytes = entry.value;
+                      final listingImage = entry.value;
                       return Stack(
                         children: [
                           Container(
@@ -290,7 +403,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
                               image: DecorationImage(
-                                image: MemoryImage(imageBytes),
+                                image: MemoryImage(listingImage.bytes),
                                 fit: BoxFit.cover,
                               ),
                             ),

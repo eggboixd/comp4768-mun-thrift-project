@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/item.dart';
@@ -168,18 +169,32 @@ final allItemsControllerProvider =
 // Controller for single item by ID
 class ItemByIdController extends StateNotifier<AsyncValue<Item?>> {
   final FirestoreService _firestoreService;
+  StreamSubscription? _subscription;
 
   ItemByIdController(this._firestoreService)
-    : super(const AsyncValue.loading());
+      : super(const AsyncValue.loading());
 
   Future<void> loadItemById(String itemId) async {
+    // Cancel any previous subscription
+    await _subscription?.cancel();
     state = const AsyncValue.loading();
+
     try {
-      final item = await _firestoreService.getItemById(itemId);
-      state = AsyncValue.data(item);
+      _subscription = _firestoreService.getItemStream(itemId).listen(
+        (item) => state = AsyncValue.data(item),
+        onError: (error, stackTrace) {
+          state = AsyncValue.error(error, stackTrace);
+        },
+      );
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
     }
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 }
 
