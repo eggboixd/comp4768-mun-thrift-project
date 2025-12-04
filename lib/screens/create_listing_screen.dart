@@ -286,7 +286,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
           for (final url in removedOriginalUrls) {
             await storageService.deleteImage(url);
           }
-        } catch (e) {}
+        } catch (e) {
+          // Not critical continue
+        }
       }
 
       // Clear item cache after create or update and refresh item provider
