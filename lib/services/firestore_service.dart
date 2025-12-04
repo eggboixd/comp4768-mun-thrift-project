@@ -69,6 +69,16 @@ class FirestoreService {
     }
   }
 
+  // Stream single item by ID (real-time updates)
+  Stream<Item?> getItemStream(String itemId) {
+    return _itemsCollection.doc(itemId).snapshots().map((doc) {
+      if (doc.exists) {
+        return Item.fromFirestore(doc);
+      }
+      return null;
+    });
+  }
+
   // Add new item
   Future<String> addItem(Item item) async {
     try {
