@@ -68,7 +68,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   Future<void> _loadExistingItem() async {
-    final item = await ref.read(firestoreServiceProvider).getItemById(widget.editItemId!);
+    final item = await ref
+        .read(firestoreServiceProvider)
+        .getItemById(widget.editItemId!);
     if (item != null) {
       setState(() {
         _originalItem = item;
@@ -86,7 +88,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       // Load images and preserve their original URLs
       for (int i = 0; i < item.imageUrls.length; i++) {
         final imageUrl = item.imageUrls[i];
-        final bytes = await ref.read(storageServiceProvider).downloadImage(imageUrl);
+        final bytes = await ref
+            .read(storageServiceProvider)
+            .downloadImage(imageUrl);
         if (bytes != null && mounted) {
           setState(() {
             final insertIndex = i <= _images.length ? i : _images.length;

@@ -21,14 +21,16 @@ class StorageService {
         imageBytes,
         SettableMetadata(contentType: 'image/jpeg'),
       );
-      
+
       final taskSnapshot = await uploadTask;
       final downloadUrl = await taskSnapshot.ref.getDownloadURL();
-      
+
       return downloadUrl;
     } on FirebaseException catch (e) {
       if (e.code == 'unauthorized') {
-        throw Exception('Storage access denied. Please check Firebase rules and authentication.');
+        throw Exception(
+          'Storage access denied. Please check Firebase rules and authentication.',
+        );
       }
       throw Exception('Firebase Storage error (${e.code}): ${e.message}');
     } catch (e) {
