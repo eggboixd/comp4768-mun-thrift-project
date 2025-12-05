@@ -121,12 +121,20 @@ class FirestoreService {
   }
 
   // Search items by title or description
-  Future<List<Item>> searchItems(String query, {ItemType? type}) async {
+  Future<List<Item>> searchItems(
+    String query, {
+    ItemType? type,
+    String? category,
+  }) async {
     try {
       Query q = _itemsCollection.where('isAvailable', isEqualTo: true);
 
       if (type != null) {
         q = q.where('type', isEqualTo: type.name);
+      }
+
+      if (category != null) {
+        q = q.where('category', isEqualTo: category);
       }
 
       final snapshot = await q.get();
