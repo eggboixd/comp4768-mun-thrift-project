@@ -37,8 +37,9 @@ class NotificationService {
     }
 
     // Initialize local notifications
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -65,7 +66,8 @@ class NotificationService {
 
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(androidChannel);
 
     // Handle foreground messages
@@ -78,8 +80,8 @@ class NotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
 
     // Get initial message if app was opened from terminated state
-    RemoteMessage? initialMessage =
-        await _firebaseMessaging.getInitialMessage();
+    RemoteMessage? initialMessage = await _firebaseMessaging
+        .getInitialMessage();
     if (initialMessage != null) {
       _handleMessageOpenedApp(initialMessage);
     }
@@ -100,7 +102,7 @@ class NotificationService {
   // Handle foreground messages
   void _handleForegroundMessage(RemoteMessage message) {
     print('Got foreground message: ${message.messageId}');
-    
+
     RemoteNotification? notification = message.notification;
     AndroidNotification? android = message.notification?.android;
 
