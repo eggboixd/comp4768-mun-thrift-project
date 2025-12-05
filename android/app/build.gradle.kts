@@ -45,3 +45,11 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Firebase Cloud Messaging for push notifications
+    implementation("com.google.firebase:firebase-messaging:23.4.0")
+    
+    // WorkManager for background notification handling
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+}

@@ -326,6 +326,49 @@ class FirestoreService {
         'progressHistory': updatedHistory.map((p) => p.toMap()).toList(),
         'updatedAt': Timestamp.now(),
       });
+
+      // Create notification for buyer about status update
+      String title = '';
+      String message = note ?? '';
+
+      switch (newStatus) {
+        case order_model.OrderStatus.preparing:
+          title = 'Order Preparing';
+          message = message.isEmpty
+              ? 'The seller is preparing your order.'
+              : message;
+          break;
+        case order_model.OrderStatus.shipped:
+          title = 'Order Shipped';
+          message = message.isEmpty
+              ? 'Your order has been shipped!'
+              : message;
+          break;
+        case order_model.OrderStatus.inDelivery:
+          title = 'Order In Delivery';
+          message = message.isEmpty
+              ? 'Your order is on the way to you.'
+              : message;
+          break;
+        case order_model.OrderStatus.completed:
+          title = 'Order Completed';
+          message = message.isEmpty
+              ? 'Your order has been delivered. Enjoy!'
+              : message;
+          break;
+        default:
+          // Don't send notifications for other status changes
+          return;
+      }
+
+      // Create notification for the buyer
+      await createNotification(
+        userId: order.buyerId,
+        type: 'orderUpdate',
+        title: title,
+        message: message,
+        orderId: orderId,
+      );
     } catch (e) {
       throw Exception('Failed to update order status with progress: $e');
     }
