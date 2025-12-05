@@ -131,7 +131,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<ItemType?>(
-                    value: _selectedType,
+                    initialValue: _selectedType,
                     decoration: const InputDecoration(
                       labelText: 'Type',
                       border: OutlineInputBorder(),
@@ -169,7 +169,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: DropdownButtonFormField<String?>(
-                    value: _selectedCategory,
+                    initialValue: _selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Category',
                       border: OutlineInputBorder(),

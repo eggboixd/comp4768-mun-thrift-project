@@ -618,7 +618,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
               // Condition dropdown
               DropdownButtonFormField<ItemCondition>(
-                value: _selectedCondition,
+                initialValue: _selectedCondition,
                 decoration: const InputDecoration(
                   labelText: 'Condition',
                   border: OutlineInputBorder(),
@@ -639,7 +639,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
               // Category dropdown (optional)
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'Category (Optional)',
                   border: OutlineInputBorder(),
