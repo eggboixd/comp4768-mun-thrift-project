@@ -33,10 +33,22 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
-  final _categoryController = TextEditingController();
 
   ItemType _selectedType = ItemType.free;
   ItemCondition _selectedCondition = ItemCondition.good;
+  String? _selectedCategory;
+  
+  // Predefined categories
+  static const List<String> _categories = [
+    'Clothing',
+    'Electronics',
+    'Books',
+    'Furniture',
+    'Sports & Outdoors',
+    'Home & Garden',
+    'Toys & Games',
+    'Other',
+  ];
   // Track current images shown in the UI. For existing images we store the
   // original URL and downloaded bytes; for new images, url is null and
   // isNew=true.
@@ -81,7 +93,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
           _priceController.text = item.price.toString();
         }
         _selectedCondition = item.condition;
-        _categoryController.text = item.category ?? '';
+        _selectedCategory = item.category;
         _quantityController.text = item.quantity.toString();
       });
 
@@ -110,7 +122,6 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     _descriptionController.dispose();
     _priceController.dispose();
     _quantityController.dispose();
-    _categoryController.dispose();
     super.dispose();
   }
 
@@ -270,9 +281,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         userId: user.uid,
         userEmail: user.email ?? '',
         condition: _selectedCondition,
-        category: _categoryController.text.trim().isEmpty
-            ? null
-            : _categoryController.text.trim(),
+        category: _selectedCategory,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         isAvailable: true,
@@ -619,14 +628,23 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Category field (optional)
-              TextFormField(
-                controller: _categoryController,
+              // Category dropdown (optional)
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'Category (Optional)',
                   border: OutlineInputBorder(),
-                  hintText: 'e.g., Clothing, Electronics, Books',
                 ),
+                hint: const Text('Select a category'),
+                items: _categories.map((category) {
+                  return DropdownMenuItem(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() => _selectedCategory = value);
+                },
               ),
               const SizedBox(height: 32),
 
