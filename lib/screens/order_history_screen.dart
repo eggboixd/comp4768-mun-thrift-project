@@ -257,7 +257,6 @@ class _OrderCard extends ConsumerWidget {
                       const SizedBox(width: 8),
                       if (order.status == OrderStatus.completed)
                         _buildReviewButton(context, ref, reviewFuture),
-                      const SizedBox(height: 8),
                       OutlinedButton.icon(
                         onPressed: () {
                           // Navigate to chat with the first seller
