@@ -331,6 +331,7 @@ class ProfileScreen extends ConsumerWidget {
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
+                                  horizontal: 4,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -339,11 +340,14 @@ class ProfileScreen extends ConsumerWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: const [
-                                  Icon(Icons.notifications, size: 20),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'Notifications',
-                                    style: TextStyle(fontSize: 13),
+                                  Icon(Icons.notifications, size: 18),
+                                  SizedBox(width: 3),
+                                  Flexible(
+                                    child: Text(
+                                      'Notifications',
+                                      style: TextStyle(fontSize: 11),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -358,6 +362,7 @@ class ProfileScreen extends ConsumerWidget {
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
+                                  horizontal: 4,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -366,11 +371,14 @@ class ProfileScreen extends ConsumerWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: const [
-                                  Icon(Icons.shopping_bag, size: 20),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'My Sales',
-                                    style: TextStyle(fontSize: 13),
+                                  Icon(Icons.shopping_bag, size: 18),
+                                  SizedBox(width: 3),
+                                  Flexible(
+                                    child: Text(
+                                      'My Sales',
+                                      style: TextStyle(fontSize: 11),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -385,6 +393,7 @@ class ProfileScreen extends ConsumerWidget {
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
+                                  horizontal: 4,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -393,9 +402,15 @@ class ProfileScreen extends ConsumerWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: const [
-                                  Icon(Icons.chat, size: 20),
-                                  SizedBox(width: 4),
-                                  Text('Chats', style: TextStyle(fontSize: 13)),
+                                  Icon(Icons.chat, size: 18),
+                                  SizedBox(width: 3),
+                                  Flexible(
+                                    child: Text(
+                                      'Chats',
+                                      style: TextStyle(fontSize: 11),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
+import '../services/firestore_service.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -33,12 +35,26 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref
+      final userCredential = await ref
           .read(authServiceProvider)
           .signUpWithEmailPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
+
+      // Save FCM token for push notifications
+      if (userCredential.user != null) {
+        try {
+          final token = await ref.read(notificationServiceProvider).getToken();
+          if (token != null) {
+            await ref
+                .read(firestoreServiceProvider)
+                .saveFCMToken(userCredential.user!.uid, token);
+          }
+        } catch (e) {
+          print('Error saving FCM token on signup: $e');
+        }
+      }
 
       if (mounted) {
         context.go('/profile/edit');

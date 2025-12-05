@@ -238,8 +238,8 @@ class _OrderCard extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       OutlinedButton.icon(
                         onPressed: () {
@@ -257,6 +257,24 @@ class _OrderCard extends ConsumerWidget {
                       const SizedBox(width: 8),
                       if (order.status == OrderStatus.completed)
                         _buildReviewButton(context, ref, reviewFuture),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          // Navigate to chat with the first seller
+                          // If there are multiple sellers, user can access others via chat list
+                          if (order.sellerIds.isNotEmpty) {
+                            context.push('/chat/${order.sellerIds.first}');
+                          }
+                        },
+                        icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                        label: const Text('Chat with Seller'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],

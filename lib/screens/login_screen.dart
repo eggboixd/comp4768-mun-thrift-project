@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
+import '../services/firestore_service.dart';
 import '../controllers/cart_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -43,6 +45,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await ref
             .read(cartControllerProvider.notifier)
             .syncCartOnLogin(userCredential.user!.uid);
+
+        // Save FCM token for push notifications
+        try {
+          final token = await ref.read(notificationServiceProvider).getToken();
+          if (token != null) {
+            await ref
+                .read(firestoreServiceProvider)
+                .saveFCMToken(userCredential.user!.uid, token);
+          }
+        } catch (e) {
+          print('Error saving FCM token on login: $e');
+        }
       }
 
       if (mounted) {

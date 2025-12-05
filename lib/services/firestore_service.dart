@@ -188,6 +188,33 @@ class FirestoreService {
     }
   }
 
+  // Save FCM token for push notifications
+  Future<void> saveFCMToken(String userId, String token) async {
+    try {
+      await _userInfoCollection.doc(userId).set({
+        'fcmToken': token,
+        'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      print('Error saving FCM token: $e');
+    }
+  }
+
+  // Get FCM token for a user
+  Future<String?> getFCMToken(String userId) async {
+    try {
+      final doc = await _userInfoCollection.doc(userId).get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data['fcmToken'] as String?;
+      }
+      return null;
+    } catch (e) {
+      print('Error getting FCM token: $e');
+      return null;
+    }
+  }
+
   // Update user info
   Future<void> updateUserInfo(
     String userId,
@@ -299,6 +326,47 @@ class FirestoreService {
         'progressHistory': updatedHistory.map((p) => p.toMap()).toList(),
         'updatedAt': Timestamp.now(),
       });
+
+      // Create notification for buyer about status update
+      String title = '';
+      String message = note ?? '';
+
+      switch (newStatus) {
+        case order_model.OrderStatus.preparing:
+          title = 'Order Preparing';
+          message = message.isEmpty
+              ? 'The seller is preparing your order.'
+              : message;
+          break;
+        case order_model.OrderStatus.shipped:
+          title = 'Order Shipped';
+          message = message.isEmpty ? 'Your order has been shipped!' : message;
+          break;
+        case order_model.OrderStatus.inDelivery:
+          title = 'Order In Delivery';
+          message = message.isEmpty
+              ? 'Your order is on the way to you.'
+              : message;
+          break;
+        case order_model.OrderStatus.completed:
+          title = 'Order Completed';
+          message = message.isEmpty
+              ? 'Your order has been delivered. Enjoy!'
+              : message;
+          break;
+        default:
+          // Don't send notifications for other status changes
+          return;
+      }
+
+      // Create notification for the buyer
+      await createNotification(
+        userId: order.buyerId,
+        type: 'orderUpdate',
+        title: title,
+        message: message,
+        orderId: orderId,
+      );
     } catch (e) {
       throw Exception('Failed to update order status with progress: $e');
     }
