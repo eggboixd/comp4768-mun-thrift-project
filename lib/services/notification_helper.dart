@@ -3,12 +3,12 @@ import 'firestore_service.dart';
 import 'notification_service.dart';
 
 /// Helper class for sending push notifications to users
-/// 
+///
 /// Push notifications are handled by Firebase Cloud Functions that:
 /// 1. Listen for new documents in the 'notifications' collection
 /// 2. Fetch the user's FCM token from Firestore
 /// 3. Send the push notification via Firebase Cloud Messaging
-/// 
+///
 /// This ensures the Firebase Admin SDK is used securely on the server side.
 class NotificationHelper {
   final FirestoreService _firestoreService;
@@ -41,7 +41,8 @@ class NotificationHelper {
       userId: sellerUserId,
       type: 'orderRequest',
       title: 'New Order Request',
-      message: '$buyerName wants to ${isFree ? "claim" : "buy"} your items. '
+      message:
+          '$buyerName wants to ${isFree ? "claim" : "buy"} your items. '
           'Please review the order.',
       orderId: orderId,
     );
@@ -73,9 +74,7 @@ class NotificationHelper {
         break;
       case 'shipped':
         title = 'Order Shipped';
-        message = message.isEmpty
-            ? 'Your order has been shipped!'
-            : message;
+        message = message.isEmpty ? 'Your order has been shipped!' : message;
         break;
       case 'inDelivery':
         title = 'Order In Delivery';
@@ -91,9 +90,7 @@ class NotificationHelper {
         break;
       case 'cancelled':
         title = 'Order Cancelled';
-        message = message.isEmpty
-            ? 'Your order has been cancelled.'
-            : message;
+        message = message.isEmpty ? 'Your order has been cancelled.' : message;
         break;
       default:
         return;

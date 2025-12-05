@@ -340,9 +340,7 @@ class FirestoreService {
           break;
         case order_model.OrderStatus.shipped:
           title = 'Order Shipped';
-          message = message.isEmpty
-              ? 'Your order has been shipped!'
-              : message;
+          message = message.isEmpty ? 'Your order has been shipped!' : message;
           break;
         case order_model.OrderStatus.inDelivery:
           title = 'Order In Delivery';

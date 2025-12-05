@@ -40,27 +40,24 @@ class _MainAppState extends ConsumerState<MainApp> {
   }
 
   void _setupFCMTokenSaving() {
-    ref.listenManual(
-      authStateChangesProvider,
-      (previous, next) async {
-        final user = next.value;
-        if (user != null) {
-          // User is logged in, save FCM token
-          try {
-            final notificationService = ref.read(notificationServiceProvider);
-            final firestoreService = ref.read(firestoreServiceProvider);
-            
-            final token = await notificationService.getToken();
-            if (token != null) {
-              await firestoreService.saveFCMToken(user.uid, token);
-              print('FCM Token saved for user ${user.uid}');
-            }
-          } catch (e) {
-            print('Error saving FCM token: $e');
+    ref.listenManual(authStateChangesProvider, (previous, next) async {
+      final user = next.value;
+      if (user != null) {
+        // User is logged in, save FCM token
+        try {
+          final notificationService = ref.read(notificationServiceProvider);
+          final firestoreService = ref.read(firestoreServiceProvider);
+
+          final token = await notificationService.getToken();
+          if (token != null) {
+            await firestoreService.saveFCMToken(user.uid, token);
+            print('FCM Token saved for user ${user.uid}');
           }
+        } catch (e) {
+          print('Error saving FCM token: $e');
         }
-      },
-    );
+      }
+    });
   }
 
   @override
