@@ -3,7 +3,7 @@ import 'firestore_service.dart';
 import 'notification_service.dart';
 
 /// Helper class for sending push notifications to users
-/// 
+///
 /// Note: For production use, you should implement this logic in Firebase Cloud Functions
 /// to avoid exposing your Firebase server key in the client app.
 class NotificationHelper {
@@ -35,7 +35,7 @@ class NotificationHelper {
   }) async {
     // Get recipient's FCM token
     final token = await _firestoreService.getFCMToken(recipientUserId);
-    
+
     if (token != null) {
       // In production, you would send this to your backend/Cloud Function
       // which then uses Firebase Admin SDK to send the notification
@@ -54,7 +54,7 @@ class NotificationHelper {
     required String orderId,
   }) async {
     final token = await _firestoreService.getFCMToken(sellerUserId);
-    
+
     if (token != null) {
       print('Would send notification to token: $token');
       print('Title: Item Sold!');
@@ -71,7 +71,7 @@ class NotificationHelper {
     required String offerId,
   }) async {
     final token = await _firestoreService.getFCMToken(receiverUserId);
-    
+
     if (token != null) {
       print('Would send notification to token: $token');
       print('Title: New Trade Offer');

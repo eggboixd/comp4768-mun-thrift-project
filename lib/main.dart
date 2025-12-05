@@ -18,7 +18,7 @@ void main() async {
   // Initialize Notifications
   final notificationService = NotificationService();
   await notificationService.initialize();
-  
+
   // Get and print FCM token for testing
   String? token = await notificationService.getToken();
   if (token != null) {

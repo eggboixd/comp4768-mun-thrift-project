@@ -47,10 +47,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         try {
           final token = await ref.read(notificationServiceProvider).getToken();
           if (token != null) {
-            await ref.read(firestoreServiceProvider).saveFCMToken(
-              userCredential.user!.uid,
-              token,
-            );
+            await ref
+                .read(firestoreServiceProvider)
+                .saveFCMToken(userCredential.user!.uid, token);
           }
         } catch (e) {
           print('Error saving FCM token on signup: $e');

@@ -45,15 +45,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await ref
             .read(cartControllerProvider.notifier)
             .syncCartOnLogin(userCredential.user!.uid);
-        
+
         // Save FCM token for push notifications
         try {
           final token = await ref.read(notificationServiceProvider).getToken();
           if (token != null) {
-            await ref.read(firestoreServiceProvider).saveFCMToken(
-              userCredential.user!.uid,
-              token,
-            );
+            await ref
+                .read(firestoreServiceProvider)
+                .saveFCMToken(userCredential.user!.uid, token);
           }
         } catch (e) {
           print('Error saving FCM token on login: $e');
