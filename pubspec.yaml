@@ -51,13 +51,10 @@ flutter:
     - assets/images/
 
 # App Icon Configuration
-# To generate icons:
-# 1. Create a 1024x1024 PNG icon and save as assets/images/app_icon.png
-# 2. Run: dart run flutter_launcher_icons
-# flutter_launcher_icons:
-#   android: true
-#   ios: true
-#   image_path: "assets/images/app_icon.png"
-#   min_sdk_android: 21
-#   remove_alpha_ios: true
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
 
