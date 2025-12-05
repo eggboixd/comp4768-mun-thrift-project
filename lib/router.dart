@@ -3,6 +3,7 @@ import 'package:comp4768_mun_thrift/screens/chat_screen.dart';
 import 'package:comp4768_mun_thrift/screens/external_profile_screen.dart';
 import 'package:comp4768_mun_thrift/screens/product_page.dart';
 import 'package:comp4768_mun_thrift/screens/edit_profile_screen.dart';
+import 'package:comp4768_mun_thrift/screens/forgot_password_screen.dart';
 import 'package:comp4768_mun_thrift/screens/cart_screen.dart';
 import 'package:comp4768_mun_thrift/screens/checkout_screen.dart';
 import 'package:comp4768_mun_thrift/screens/create_listing_screen.dart';
@@ -37,9 +38,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = authState.value != null;
       final isLoggingIn =
           state.matchedLocation == '/login' ||
-          state.matchedLocation == '/signup';
+          state.matchedLocation == '/signup' ||
+          state.matchedLocation == '/forgot-password';
 
-      // If not logged in and not on login/signup pages, redirect to login
+      // If not logged in and not on login/signup/forgot-password pages, redirect to login
       if (!isLoggedIn && !isLoggingIn) {
         return '/login';
       }
@@ -86,6 +88,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       // Trade offer routes (must come before /:type route to avoid conflicts)
       GoRoute(
