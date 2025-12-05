@@ -22,7 +22,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   ItemType? _selectedType;
   String? _selectedCategory;
   List<Item> _results = [];
-  
+
   // Predefined categories (matching create_listing_screen)
   static const List<String> _categories = [
     'Clothing',
@@ -183,10 +183,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     items: [
                       const DropdownMenuItem(
                         value: null,
-                        child: Text(
-                          'All',
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text('All', overflow: TextOverflow.ellipsis),
                       ),
                       ..._categories.map((category) {
                         return DropdownMenuItem(

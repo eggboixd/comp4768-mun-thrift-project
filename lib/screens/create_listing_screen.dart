@@ -37,7 +37,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   ItemType _selectedType = ItemType.free;
   ItemCondition _selectedCondition = ItemCondition.good;
   String? _selectedCategory;
-  
+
   // Predefined categories
   static const List<String> _categories = [
     'Clothing',
