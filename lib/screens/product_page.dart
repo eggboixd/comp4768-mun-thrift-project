@@ -1,7 +1,9 @@
 import 'package:comp4768_mun_thrift/controllers/cart_controller.dart';
 import 'package:comp4768_mun_thrift/controllers/item_controller.dart';
 import 'package:comp4768_mun_thrift/controllers/user_info_controller.dart';
+import 'package:comp4768_mun_thrift/services/reviews_service.dart';
 import 'package:comp4768_mun_thrift/screens/bottom_nav_bar.dart';
+import '../models/review.dart';
 import 'package:comp4768_mun_thrift/services/auth_service.dart';
 import 'package:comp4768_mun_thrift/services/firestore_service.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,29 @@ class ProductPage extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<ProductPage> createState() => _ProductPageState();
+}
+
+// Widget to render a fixed 1-5 star row
+class _StarRow extends StatelessWidget {
+  final int rating;
+  final double size;
+
+  const _StarRow({required this.rating, this.size = 20});
+
+  @override
+  Widget build(BuildContext context) {
+    final clamped = rating.clamp(0, 5);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        return Icon(
+          index < clamped ? Icons.star : Icons.star_border,
+          color: Colors.amber,
+          size: size,
+        );
+      }),
+    );
+  }
 }
 
 class _ProductPageState extends ConsumerState<ProductPage> {
@@ -238,6 +263,8 @@ class _ProductPageState extends ConsumerState<ProductPage> {
                           final sellerInfoAsync = ref.watch(
                             userInfoControllerProvider(item.userId),
                           );
+                          final AsyncValue<List<Review>> userReviewsAsync = ref
+                              .watch(userReviewsProvider(item.userId));
                           return sellerInfoAsync.when(
                             data: (sellerInfo) {
                               final displayName =
@@ -248,24 +275,71 @@ class _ProductPageState extends ConsumerState<ProductPage> {
                                 onTap: () => context.push(
                                   '/profile/external/${item.userId}',
                                 ),
-                                child: Row(
+                                child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    if (profileImage.isNotEmpty) ...[
-                                      CircleAvatar(
-                                        radius: 12,
-                                        backgroundImage: NetworkImage(
-                                          profileImage,
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (profileImage.isNotEmpty) ...[
+                                          CircleAvatar(
+                                            radius: 12,
+                                            backgroundImage: NetworkImage(
+                                              profileImage,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                        ],
+                                        Text(
+                                          displayName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 16,
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                    ],
-                                    Text(
-                                      displayName,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 16,
-                                      ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    userReviewsAsync.when(
+                                      data: (reviews) {
+                                        if (reviews.isEmpty) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        final sum = reviews.fold<int>(
+                                          0,
+                                          (prev, el) => prev + el.rating,
+                                        );
+                                        final avgRating = reviews.isNotEmpty
+                                            ? sum / reviews.length
+                                            : 0.0;
+                                        return Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            _StarRow(
+                                              rating: avgRating.round(),
+                                              size: 14,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              avgRating.toStringAsFixed(1),
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '(${reviews.length})',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                      loading: () => const SizedBox.shrink(),
+                                      error: (e, st) => const SizedBox.shrink(),
                                     ),
                                   ],
                                 ),

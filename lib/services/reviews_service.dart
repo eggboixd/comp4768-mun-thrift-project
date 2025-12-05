@@ -54,10 +54,9 @@ class ReviewsService {
   // Get a review by orderId for a specific user
   Future<Review?> getReviewByOrderId(String userId, String orderId) async {
     try {
-      final querySnapshot = await _userReviewsCollection(userId)
-          .where('orderId', isEqualTo: orderId)
-          .limit(1)
-          .get();
+      final querySnapshot = await _userReviewsCollection(
+        userId,
+      ).where('orderId', isEqualTo: orderId).limit(1).get();
       if (querySnapshot.docs.isNotEmpty) {
         return Review.fromFirestore(querySnapshot.docs.first);
       }

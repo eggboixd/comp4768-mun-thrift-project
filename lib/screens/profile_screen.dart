@@ -2,6 +2,8 @@ import 'package:comp4768_mun_thrift/controllers/user_info_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:comp4768_mun_thrift/services/reviews_service.dart';
+import '../models/review.dart';
 import '../models/item.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
@@ -21,6 +23,9 @@ class ProfileScreen extends ConsumerWidget {
     final userInfoAsync = ref.watch(userInfoControllerProvider(user.uid));
 
     final userItemsAsync = ref.watch(userItemsProvider(user.uid));
+    final AsyncValue<List<Review>> userReviewsAsync = ref.watch(
+      userReviewsProvider(user.uid),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -126,6 +131,192 @@ class ProfileScreen extends ConsumerWidget {
                               Text('Edit Profile'),
                             ],
                           ),
+                        ),
+                      ),
+                      // Reviews Section
+                      Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Reviews',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            userReviewsAsync.when(
+                              data: (reviews) {
+                                if (reviews.isEmpty) {
+                                  return Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(32.0),
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Icons.rate_review_outlined,
+                                            size: 64,
+                                            color: Colors.grey[400],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'No reviews yet',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            "Be the first to leave a review!",
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey[500],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                // Compute average rating
+                                final avgRating = reviews.isNotEmpty
+                                    ? (reviews
+                                              .map((r) => r.rating)
+                                              .reduce((a, b) => a + b) /
+                                          reviews.length)
+                                    : 0.0;
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          _StarRow(
+                                            rating: avgRating.round(),
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            avgRating.toStringAsFixed(1),
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            '(${reviews.length})',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    ListView.separated(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      itemBuilder: (context, index) {
+                                        final review = reviews[index];
+                                        return Card(
+                                          elevation: 1,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(12.0),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    const Text(
+                                                      'Anonymous',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      _formatReviewDate(
+                                                        review.createdAt,
+                                                      ),
+                                                      style: TextStyle(
+                                                        color: Colors.grey[600],
+                                                        fontSize: 12,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 8),
+                                                _StarRow(
+                                                  rating: review.rating,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(review.content),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      separatorBuilder: (context, index) =>
+                                          const SizedBox(height: 12),
+                                      itemCount: reviews.length,
+                                    ),
+                                  ],
+                                );
+                              },
+                              loading: () => const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                              error: (error, stack) => Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(32.0),
+                                  child: Column(
+                                    children: [
+                                      const Icon(
+                                        Icons.error_outline,
+                                        size: 64,
+                                        color: Colors.red,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Error loading reviews',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        error.toString(),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[500],
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -567,4 +758,48 @@ class _StatCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// Widget to render a fixed 1-5 star row
+class _StarRow extends StatelessWidget {
+  final int rating;
+  final double size;
+
+  const _StarRow({required this.rating, this.size = 20});
+
+  @override
+  Widget build(BuildContext context) {
+    final clamped = rating.clamp(0, 5);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        return Icon(
+          index < clamped ? Icons.star : Icons.star_border,
+          color: Colors.amber,
+          size: size,
+        );
+      }),
+    );
+  }
+}
+
+// Helper to format dates for display in reviews
+String _formatReviewDate(DateTime? date) {
+  if (date == null) return '';
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  final month = months[date.month - 1];
+  return '$month ${date.day}, ${date.year}';
 }

@@ -27,7 +27,7 @@ class Review {
       rating: json['rating'],
       orderId: json['orderId'],
       createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt'])
+      updatedAt: DateTime.parse(json['updatedAt']),
     );
   }
 

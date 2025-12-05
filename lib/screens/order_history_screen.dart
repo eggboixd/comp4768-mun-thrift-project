@@ -97,8 +97,8 @@ class _OrderCard extends ConsumerWidget {
     final hasSeller = order.sellerIds.isNotEmpty;
     final sellerId = hasSeller ? order.sellerIds[0] : null;
     final reviewFuture = (hasUser && order.id != null && hasSeller)
-      ? ref.watch(reviewByOrderIdProvider((sellerId!, order.id!)))
-      : null;
+        ? ref.watch(reviewByOrderIdProvider((sellerId!, order.id!)))
+        : null;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -268,7 +268,11 @@ class _OrderCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildReviewButton(BuildContext context, WidgetRef ref, AsyncValue<Review?>? reviewFuture) {
+  Widget _buildReviewButton(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<Review?>? reviewFuture,
+  ) {
     if (reviewFuture == null) {
       // No user logged in or order id missing
       return const SizedBox.shrink();
@@ -298,7 +302,11 @@ class _OrderCard extends ConsumerWidget {
       },
       loading: () => const Padding(
         padding: EdgeInsets.symmetric(horizontal: 8.0),
-        child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
       ),
       error: (err, st) => OutlinedButton.icon(
         onPressed: () => _showAddReviewDialog(context, ref),
@@ -311,7 +319,9 @@ class _OrderCard extends ConsumerWidget {
   void _showAddReviewDialog(BuildContext context, WidgetRef ref) {
     final user = ref.read(authStateChangesProvider).value;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please log in to add a review')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to add a review')),
+      );
       return;
     }
 
@@ -321,77 +331,109 @@ class _OrderCard extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) {
-        return StatefulBuilder(builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Add a review'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(5, (i) {
-                    return IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      icon: Icon(
-                        i < rating ? Icons.star : Icons.star_border,
-                        color: Colors.amber,
-                      ),
-                      onPressed: () => setState(() => rating = i + 1),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: textController,
-                  minLines: 2,
-                  maxLines: 4,
-                  decoration: const InputDecoration(
-                    hintText: 'Write your review (optional)',
-                    border: OutlineInputBorder(),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add a review'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(5, (i) {
+                      return IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        icon: Icon(
+                          i < rating ? Icons.star : Icons.star_border,
+                          color: Colors.amber,
+                        ),
+                        onPressed: () => setState(() => rating = i + 1),
+                      );
+                    }),
                   ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: textController,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      hintText: 'Write your review (optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (order.id == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Invalid order')),
+                      );
+                      return;
+                    }
+                    final review = Review(
+                      userId: user.uid,
+                      content: textController.text.trim(),
+                      rating: rating,
+                      orderId: order.id!,
+                      createdAt: DateTime.now(),
+                      updatedAt: DateTime.now(),
+                    );
+                    try {
+                      await ref
+                          .read(reviewsServiceProvider)
+                          .addReview(order.sellerIds[0], review);
+                      // refresh the review provider for this order so the UI updates
+                      ref.invalidate(
+                        reviewByOrderIdProvider((
+                          order.sellerIds[0],
+                          order.id!,
+                        )),
+                      );
+                      // ignore: use_build_context_synchronously
+                      Navigator.of(context).pop();
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Review submitted successfully'),
+                        ),
+                      );
+                    } catch (e) {
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to submit review: $e')),
+                      );
+                    }
+                  },
+                  child: const Text('Submit'),
                 ),
               ],
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-              ElevatedButton(
-                onPressed: () async {
-                  if (order.id == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid order')));
-                    return;
-                  }
-                  final review = Review(
-                    userId: user.uid,
-                    content: textController.text.trim(),
-                    rating: rating,
-                    orderId: order.id!,
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
-                  );
-                  try {
-                    await ref.read(reviewsServiceProvider).addReview(order.sellerIds[0], review);
-                    // refresh the review provider for this order so the UI updates
-                    ref.invalidate(reviewByOrderIdProvider((order.sellerIds[0], order.id!)));
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Review submitted successfully')));
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit review: $e')));
-                  }
-                },
-                child: const Text('Submit'),
-              ),
-            ],
-          );
-        });
+            );
+          },
+        );
       },
     );
   }
 
-  void _showEditReviewDialog(BuildContext context, WidgetRef ref, Review review) {
+  void _showEditReviewDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Review review,
+  ) {
     final user = ref.read(authStateChangesProvider).value;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please log in to edit a review')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to edit a review')),
+      );
       return;
     }
 
@@ -401,102 +443,157 @@ class _OrderCard extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) {
-        return StatefulBuilder(builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Edit review'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(5, (i) {
-                    return IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      icon: Icon(
-                        i < rating ? Icons.star : Icons.star_border,
-                        color: Colors.amber,
-                      ),
-                      onPressed: () => setState(() => rating = i + 1),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: textController,
-                  minLines: 2,
-                  maxLines: 4,
-                  decoration: const InputDecoration(
-                    hintText: 'Write your review (optional)',
-                    border: OutlineInputBorder(),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Edit review'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(5, (i) {
+                      return IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        icon: Icon(
+                          i < rating ? Icons.star : Icons.star_border,
+                          color: Colors.amber,
+                        ),
+                        onPressed: () => setState(() => rating = i + 1),
+                      );
+                    }),
                   ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: textController,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      hintText: 'Write your review (optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    if (review.id == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Invalid review')),
+                      );
+                      return;
+                    }
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Delete review'),
+                        content: const Text(
+                          'Are you sure you want to delete this review? This action cannot be undone.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm != true) return;
+
+                    try {
+                      await ref
+                          .read(reviewsServiceProvider)
+                          .deleteReview(order.sellerIds[0], review.id!);
+                      // refresh the review provider for this order so the UI updates
+                      ref.invalidate(
+                        reviewByOrderIdProvider((
+                          order.sellerIds[0],
+                          order.id!,
+                        )),
+                      );
+                      // ignore: use_build_context_synchronously
+                      Navigator.of(context).pop(); // close edit dialog
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Review deleted successfully'),
+                        ),
+                      );
+                    } catch (e) {
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to delete review: $e')),
+                      );
+                    }
+                  },
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  child: const Text('Delete'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (review.id == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Invalid review')),
+                      );
+                      return;
+                    }
+                    final updates = {
+                      'content': textController.text.trim(),
+                      'rating': rating,
+                      'updatedAt': DateTime.now(),
+                    };
+                    try {
+                      await ref
+                          .read(reviewsServiceProvider)
+                          .updateReview(
+                            order.sellerIds[0],
+                            review.id!,
+                            updates,
+                          );
+                      // refresh the review provider for this order so the UI updates
+                      ref.invalidate(
+                        reviewByOrderIdProvider((
+                          order.sellerIds[0],
+                          order.id!,
+                        )),
+                      );
+                      // ignore: use_build_context_synchronously
+                      Navigator.of(context).pop();
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Review updated successfully'),
+                        ),
+                      );
+                    } catch (e) {
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to update review: $e')),
+                      );
+                    }
+                  },
+                  child: const Text('Save'),
                 ),
               ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  if (review.id == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid review')));
-                    return;
-                  }
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Delete review'),
-                      content: const Text('Are you sure you want to delete this review? This action cannot be undone.'),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          style: TextButton.styleFrom(foregroundColor: Colors.red),
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirm != true) return;
-
-                  try {
-                    await ref.read(reviewsServiceProvider).deleteReview(order.sellerIds[0], review.id!);
-                    // refresh the review provider for this order so the UI updates
-                    ref.invalidate(reviewByOrderIdProvider((order.sellerIds[0], order.id!)));
-                    Navigator.of(context).pop(); // close edit dialog
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Review deleted successfully')));
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete review: $e')));
-                  }
-                },
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Delete'),
-              ),
-              TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-              ElevatedButton(
-                onPressed: () async {
-                  if (review.id == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid review')));
-                    return;
-                  }
-                  final updates = {
-                    'content': textController.text.trim(),
-                    'rating': rating,
-                    'updatedAt': DateTime.now(),
-                  };
-                  try {
-                    await ref.read(reviewsServiceProvider).updateReview(order.sellerIds[0], review.id!, updates);
-                    // refresh the review provider for this order so the UI updates
-                    ref.invalidate(reviewByOrderIdProvider((order.sellerIds[0], order.id!)));
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Review updated successfully')));
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update review: $e')));
-                  }
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        });
+            );
+          },
+        );
       },
     );
   }
