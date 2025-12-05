@@ -486,7 +486,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                 children: [
                   Expanded(
                     child: ChoiceChip(
-                      label: const Text('Free'),
+                      label: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('Free'),
+                      ),
                       selected: _selectedType == ItemType.free,
                       onSelected: (selected) {
                         if (selected) {
@@ -498,7 +501,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: ChoiceChip(
-                      label: const Text('Trade'),
+                      label: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('Trade'),
+                      ),
                       selected: _selectedType == ItemType.trade,
                       onSelected: (selected) {
                         if (selected) {
@@ -510,7 +516,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: ChoiceChip(
-                      label: const Text('Sell'),
+                      label: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('Sell'),
+                      ),
                       selected: _selectedType == ItemType.buy,
                       onSelected: (selected) {
                         if (selected) {

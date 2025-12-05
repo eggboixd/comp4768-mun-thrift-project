@@ -20,7 +20,20 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   bool _isLoading = false;
   String _query = '';
   ItemType? _selectedType;
+  String? _selectedCategory;
   List<Item> _results = [];
+  
+  // Predefined categories (matching create_listing_screen)
+  static const List<String> _categories = [
+    'Clothing',
+    'Electronics',
+    'Books',
+    'Furniture',
+    'Sports & Outdoors',
+    'Home & Garden',
+    'Toys & Games',
+    'Other',
+  ];
 
   @override
   void initState() {
@@ -51,7 +64,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       });
       try {
         final fs = ref.read(firestoreServiceProvider);
-        final items = await fs.searchItems(query, type: _selectedType);
+        final items = await fs.searchItems(
+          query,
+          type: _selectedType,
+          category: _selectedCategory,
+        );
         setState(() {
           _results = items;
         });
@@ -81,65 +98,115 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            TextField(
+              controller: _controller,
+              textInputAction: TextInputAction.search,
+              onChanged: (value) {
+                _query = value;
+                _performSearch(value);
+              },
+              onSubmitted: (value) => _performSearch(value),
+              decoration: InputDecoration(
+                hintText: 'Search by title, description, or category',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _controller.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _controller.clear();
+                          setState(() {
+                            _results = [];
+                            _query = '';
+                          });
+                        },
+                      )
+                    : null,
+                border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    textInputAction: TextInputAction.search,
-                    onChanged: (value) {
-                      _query = value;
-                      _performSearch(value);
-                    },
-                    onSubmitted: (value) => _performSearch(value),
-                    decoration: InputDecoration(
-                      hintText: 'Search by title, description, or category',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _controller.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _controller.clear();
-                                setState(() {
-                                  _results = [];
-                                  _query = '';
-                                });
-                              },
-                            )
-                          : null,
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                  child: DropdownButtonFormField<ItemType?>(
+                    value: _selectedType,
+                    decoration: const InputDecoration(
+                      labelText: 'Type',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
                       ),
                     ),
+                    isDense: true,
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('All')),
+                      DropdownMenuItem(
+                        value: ItemType.free,
+                        child: Text(ItemType.free.displayName),
+                      ),
+                      DropdownMenuItem(
+                        value: ItemType.trade,
+                        child: Text(ItemType.trade.displayName),
+                      ),
+                      DropdownMenuItem(
+                        value: ItemType.buy,
+                        child: Text(ItemType.buy.displayName),
+                      ),
+                    ],
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedType = val;
+                      });
+                      if (_controller.text.trim().isNotEmpty) {
+                        _performSearch(_controller.text.trim());
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(width: 8),
-                DropdownButton<ItemType?>(
-                  value: _selectedType,
-                  hint: const Text('All'),
-                  items: [
-                    const DropdownMenuItem(value: null, child: Text('All')),
-                    DropdownMenuItem(
-                      value: ItemType.free,
-                      child: Text(ItemType.free.displayName),
+                Expanded(
+                  child: DropdownButtonFormField<String?>(
+                    value: _selectedCategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
-                    DropdownMenuItem(
-                      value: ItemType.trade,
-                      child: Text(ItemType.trade.displayName),
-                    ),
-                    DropdownMenuItem(
-                      value: ItemType.buy,
-                      child: Text(ItemType.buy.displayName),
-                    ),
-                  ],
-                  onChanged: (val) {
-                    setState(() {
-                      _selectedType = val;
-                    });
-                    if (_controller.text.trim().isNotEmpty) {
-                      _performSearch(_controller.text.trim());
-                    }
-                  },
+                    isDense: true,
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text(
+                          'All',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      ..._categories.map((category) {
+                        return DropdownMenuItem(
+                          value: category,
+                          child: Text(
+                            category,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }),
+                    ],
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedCategory = val;
+                      });
+                      if (_controller.text.trim().isNotEmpty) {
+                        _performSearch(_controller.text.trim());
+                      }
+                    },
+                  ),
                 ),
               ],
             ),
