@@ -28,6 +28,9 @@ class ReviewsService {
       if (map['createdAt'] == null) {
         map['createdAt'] = FieldValue.serverTimestamp();
       }
+      if (map['updatedAt'] == null) {
+        map['updatedAt'] = FieldValue.serverTimestamp();
+      }
       final docRef = await _userReviewsCollection(userId).add(map);
       return docRef.id;
     } catch (e) {
@@ -48,6 +51,22 @@ class ReviewsService {
     }
   }
 
+  // Get a review by orderId for a specific user
+  Future<Review?> getReviewByOrderId(String userId, String orderId) async {
+    try {
+      final querySnapshot = await _userReviewsCollection(userId)
+          .where('orderId', isEqualTo: orderId)
+          .limit(1)
+          .get();
+      if (querySnapshot.docs.isNotEmpty) {
+        return Review.fromFirestore(querySnapshot.docs.first);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to get review by orderId: $e');
+    }
+  }
+
   // Stream of reviews for a user (real-time updates)
   Stream<List<Review>> getReviewsForUser(String userId) {
     return _userReviewsCollection(
@@ -65,11 +84,14 @@ class ReviewsService {
   ) async {
     try {
       // Allow updating content, rating, or other fields as needed
-      if (updates.containsKey('createdAt')) {
-        final v = updates['createdAt'];
+      if (updates.containsKey('updatedAt')) {
+        final v = updates['updatedAt'];
         if (v is DateTime) {
-          updates['createdAt'] = Timestamp.fromDate(v);
+          updates['updatedAt'] = Timestamp.fromDate(v);
         }
+      }
+      if (updates.containsKey('createdAt')) {
+        updates.remove('createdAt');
       }
       await _userReviewsCollection(userId).doc(reviewId).update(updates);
     } catch (e) {
@@ -108,4 +130,12 @@ final reviewByIdProvider = FutureProvider.family
       final userId = params.$1;
       final reviewId = params.$2;
       return service.getReviewById(userId, reviewId);
+    });
+
+final reviewByOrderIdProvider = FutureProvider.family
+    .autoDispose<Review?, (String, String)>((ref, params) {
+      final service = ref.watch(reviewsServiceProvider);
+      final userId = params.$1;
+      final orderId = params.$2;
+      return service.getReviewByOrderId(userId, orderId);
     });
