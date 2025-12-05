@@ -229,18 +229,41 @@ class _OrderCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      context.push('/order-details/${order.id}');
-                    },
-                    icon: const Icon(Icons.arrow_forward, size: 16),
-                    label: const Text('View Details'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          context.push('/order-details/${order.id}');
+                        },
+                        icon: const Icon(Icons.arrow_forward, size: 16),
+                        label: const Text('View Details'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          // Navigate to chat with the first seller
+                          // If there are multiple sellers, user can access others via chat list
+                          if (order.sellerIds.isNotEmpty) {
+                            context.push('/chat/${order.sellerIds.first}');
+                          }
+                        },
+                        icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                        label: const Text('Chat with Seller'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
