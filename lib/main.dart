@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'firebase_options.dart';
 import 'router.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,17 @@ void main() async {
 
   // Initialize Hive
   await Hive.initFlutter();
+
+  // Initialize Notifications
+  final notificationService = NotificationService();
+  await notificationService.initialize();
+  
+  // Get and print FCM token for testing
+  String? token = await notificationService.getToken();
+  if (token != null) {
+    print('FCM Token: $token');
+    // TODO: Save this token to Firestore when user logs in
+  }
 
   runApp(const ProviderScope(child: MainApp()));
 }

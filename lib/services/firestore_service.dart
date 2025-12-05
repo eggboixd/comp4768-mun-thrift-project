@@ -188,6 +188,33 @@ class FirestoreService {
     }
   }
 
+  // Save FCM token for push notifications
+  Future<void> saveFCMToken(String userId, String token) async {
+    try {
+      await _userInfoCollection.doc(userId).set({
+        'fcmToken': token,
+        'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      print('Error saving FCM token: $e');
+    }
+  }
+
+  // Get FCM token for a user
+  Future<String?> getFCMToken(String userId) async {
+    try {
+      final doc = await _userInfoCollection.doc(userId).get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data['fcmToken'] as String?;
+      }
+      return null;
+    } catch (e) {
+      print('Error getting FCM token: $e');
+      return null;
+    }
+  }
+
   // Update user info
   Future<void> updateUserInfo(
     String userId,
