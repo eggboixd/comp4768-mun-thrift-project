@@ -147,9 +147,7 @@ class ProfileScreen extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            _ReviewsSection(
-                              reviewsAsync: userReviewsAsync,
-                            ),
+                            _ReviewsSection(reviewsAsync: userReviewsAsync),
                           ],
                         ),
                       ),
@@ -640,26 +638,16 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection>
           padding: const EdgeInsets.all(32.0),
           child: Column(
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               Text(
                 'Error loading reviews',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 18, color: Colors.grey[600]),
               ),
               const SizedBox(height: 8),
               Text(
                 error.toString(),
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[500],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -681,10 +669,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection>
                   const SizedBox(height: 16),
                   Text(
                     'No reviews yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -695,11 +680,12 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection>
         // Compute average rating
         final avgRating = reviews.isNotEmpty
             ? (reviews.map((r) => r.rating).reduce((a, b) => a + b) /
-                reviews.length)
+                  reviews.length)
             : 0.0;
 
-        final displayCount = _expanded ? reviews.length :
-            (reviews.length > _previewCount ? _previewCount : reviews.length);
+        final displayCount = _expanded
+            ? reviews.length
+            : (reviews.length > _previewCount ? _previewCount : reviews.length);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -729,7 +715,9 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection>
                         _expanded = !_expanded;
                       });
                     },
-                    icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
+                    icon: Icon(
+                      _expanded ? Icons.expand_less : Icons.expand_more,
+                    ),
                     label: Text(_expanded ? 'Show less' : 'Show all'),
                   ),
                 ],
@@ -754,9 +742,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection>
                           children: [
                             const Text(
                               'Anonymous',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             Text(
                               _formatReviewDate(review.createdAt),
