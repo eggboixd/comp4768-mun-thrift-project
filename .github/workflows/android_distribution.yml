@@ -101,6 +101,27 @@ jobs:
         echo "keyPassword=$KEY_PASS" >> android/app/key.properties
         echo "✅ Signing configuration files created."
     
+    # Step 5.5: Extract SHA-1 Fingerprint for Firebase 🔐
+    - name: Extract SHA-1 Fingerprint
+      run: |
+        echo ""
+        echo "═══════════════════════════════════════════════"
+        echo "🔐 SHA-1 FINGERPRINT FOR FIREBASE CONSOLE"
+        echo "═══════════════════════════════════════════════"
+        keytool -list -v -keystore android/app/upload-keystore.jks -alias upload -storepass android -keypass android 2>/dev/null | grep "SHA1:" || echo "⚠️ SHA1 extraction failed"
+        echo "═══════════════════════════════════════════════"
+        echo ""
+        echo "📋 INSTRUCTIONS:"
+        echo "1. Copy the SHA-1 value above (the part after 'SHA1:')"
+        echo "2. Go to Firebase Console > Project Settings"
+        echo "3. Select your Android app (com.example.comp4768_mun_thrift)"
+        echo "4. Click 'Add fingerprint' button"
+        echo "5. Paste the SHA-1 value"
+        echo "6. Download the updated google-services.json"
+        echo "7. Replace android/app/google-services.json in your repo"
+        echo "8. Commit and push the updated file"
+        echo "═══════════════════════════════════════════════"
+    
     # Step 6: Build the actual Android APK file (SIGNED)
     - name: Build Android Release APK
       run: flutter build apk --release  # Creates the installable .apk file
