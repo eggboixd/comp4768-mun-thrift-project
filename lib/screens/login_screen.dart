@@ -59,13 +59,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           print('Error saving FCM token on login: $e');
         }
 
-        // Wait for user info to load before navigating
-        final userInfoAsync = ref.read(userInfoControllerProvider(userCredential.user!.uid));
-        await userInfoAsync.when(
-          data: (_) => Future.value(),
-          loading: () => Future.delayed(const Duration(milliseconds: 100)),
-          error: (_, __) => Future.value(),
-        );
+        // Wait for user info to load from Firestore before navigating
+        // This ensures the router has the correct user data when checking profile completion
+        try {
+          await ref.read(userInfoControllerProvider(userCredential.user!.uid).notifier).loadUserInfo(userCredential.user!.uid);
+        } catch (e) {
+          print('Error loading user info: $e');
+        }
       }
 
       if (mounted) {
