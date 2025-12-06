@@ -24,22 +24,10 @@ class UserInfoController extends StateNotifier<AsyncValue<UserInfo?>> {
     state = const AsyncValue.loading();
 
     try {
-      // Try to load from cache first (only if it has valid data)
-      if (_cacheBox != null) {
-        final cachedData = _cacheBox.get('user_$userId');
-        if (cachedData != null &&
-            cachedData['name'] != null &&
-            (cachedData['name'] as String).isNotEmpty) {
-          final cachedUser = UserInfo(
-            id: userId,
-            name: cachedData['name'] ?? '',
-            address: cachedData['address'] ?? '',
-            about: cachedData['about'],
-            profileImageUrl: cachedData['profileImageUrl'] ?? '',
-          );
-          state = AsyncValue.data(cachedUser);
-        }
-      }
+      // Note: We skip setting cached data here to prevent router from seeing
+      // stale/incomplete cached data during login. Cache is still used for
+      // displaying UI while Firestore loads, but we wait for fresh Firestore
+      // data before marking the state as loaded.
 
       // Always load from Firestore to get latest data
       final userInfo = await _firestoreService.getUserInfo(userId);
