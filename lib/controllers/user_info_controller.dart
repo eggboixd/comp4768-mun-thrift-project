@@ -27,8 +27,8 @@ class UserInfoController extends StateNotifier<AsyncValue<UserInfo?>> {
       // Try to load from cache first (only if it has valid data)
       if (_cacheBox != null) {
         final cachedData = _cacheBox.get('user_$userId');
-        if (cachedData != null && 
-            cachedData['name'] != null && 
+        if (cachedData != null &&
+            cachedData['name'] != null &&
             (cachedData['name'] as String).isNotEmpty) {
           final cachedUser = UserInfo(
             id: userId,

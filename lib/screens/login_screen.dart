@@ -60,7 +60,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
 
         // Wait for user info to load before navigating
-        final userInfoAsync = ref.read(userInfoControllerProvider(userCredential.user!.uid));
+        final userInfoAsync = ref.read(
+          userInfoControllerProvider(userCredential.user!.uid),
+        );
         await userInfoAsync.when(
           data: (_) => Future.value(),
           loading: () => Future.delayed(const Duration(milliseconds: 100)),
