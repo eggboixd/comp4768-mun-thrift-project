@@ -21,16 +21,10 @@ import 'screens/signup_screen.dart';
 import 'screens/item_list_screen.dart';
 import 'screens/profile_screen.dart';
 import 'services/auth_service.dart';
-import 'controllers/user_info_controller.dart';
 
 // GoRouter provider with auth redirect logic
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
-  // Watch user info for the current user if logged in
-  final userId = authState.value?.uid;
-  final userInfoAsync = userId != null
-      ? ref.watch(userInfoControllerProvider(userId))
-      : null;
 
   return GoRouter(
     initialLocation: '/login',
@@ -46,47 +40,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         return isOnAuthPage ? null : '/login';
       }
 
-      // User is logged in - check if profile is complete before allowing access
-      // to app pages (but allow access to profile/edit)
-      if (state.matchedLocation == '/profile/edit') {
-        return null; // Always allow access to edit profile page
-      }
-
-      // For all other pages, check if profile is complete
-      if (userInfoAsync == null || userInfoAsync.isLoading) {
-        // Data still loading - stay on current page and wait
-        print(
-          'DEBUG ROUTER: Waiting for data - isLoading: ${userInfoAsync?.isLoading}, hasValue: ${userInfoAsync?.hasValue}',
-        );
-        return null;
-      }
-
-      // If we don't have a value after loading completed, treat as error - stay put
-      if (!userInfoAsync.hasValue) {
-        print('DEBUG ROUTER: No value after loading!');
-        return null;
-      }
-
-      final userInfo = userInfoAsync.value;
-      print(
-        'DEBUG ROUTER: Got userInfo - name: "${userInfo?.name}", address: "${userInfo?.address}"',
-      );
-      final profileComplete =
-          userInfo != null &&
-          userInfo.name.isNotEmpty &&
-          userInfo.address.isNotEmpty;
-      print('DEBUG ROUTER: profileComplete = $profileComplete');
-
-      if (!profileComplete) {
-        // Profile incomplete - redirect to edit unless already there
-        return '/profile/edit';
-      }
-
-      // Profile complete - if on auth page, redirect to app
-      if (isOnAuthPage) {
+      // If logged in and on auth pages, redirect to home
+      if (isLoggedIn && isOnAuthPage) {
         return '/free';
       }
 
+      // Allow all other navigation
       return null;
     },
     routes: [
