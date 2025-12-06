@@ -36,55 +36,53 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/login',
     redirect: (context, state) {
       final isLoggedIn = authState.value != null;
-      final isLoggingIn =
+      final isOnAuthPage =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/signup' ||
           state.matchedLocation == '/forgot-password';
 
-      // If not logged in and not on login/signup/forgot-password pages, redirect to login
-      if (!isLoggedIn && !isLoggingIn) {
-        return '/login';
+      // If not logged in, force to login page
+      if (!isLoggedIn) {
+        return isOnAuthPage ? null : '/login';
       }
 
-      // If logged in and on login/signup pages, check user info
-      if (isLoggedIn && isLoggingIn) {
-        // Wait for user info to fully load before making any redirect decisions
-        // This prevents premature redirects when data is still loading
-        if (userInfoAsync == null ||
-            userInfoAsync.isLoading ||
-            !userInfoAsync.hasValue) {
-          return null; // Stay on current page while loading
-        }
-        final userInfo = userInfoAsync.value;
-        final needsSetup =
-            userInfo == null ||
-            userInfo.name.isEmpty ||
-            userInfo.address.isEmpty;
-        if (needsSetup) {
-          return '/profile/edit';
-        }
+      // User is logged in - check if profile is complete before allowing access
+      // to app pages (but allow access to profile/edit)
+      if (state.matchedLocation == '/profile/edit') {
+        return null; // Always allow access to edit profile page
+      }
+
+      // For all other pages, check if profile is complete
+      if (userInfoAsync == null || userInfoAsync.isLoading) {
+        // Data still loading - stay on current page and wait
+        print('DEBUG ROUTER: Waiting for data - isLoading: ${userInfoAsync?.isLoading}, hasValue: ${userInfoAsync?.hasValue}');
+        return null;
+      }
+
+      // If we don't have a value after loading completed, treat as error - stay put
+      if (!userInfoAsync.hasValue) {
+        print('DEBUG ROUTER: No value after loading!');
+        return null;
+      }
+
+      final userInfo = userInfoAsync.value;
+      print('DEBUG ROUTER: Got userInfo - name: "${userInfo?.name}", address: "${userInfo?.address}"');
+      final profileComplete =
+          userInfo != null &&
+          userInfo.name.isNotEmpty &&
+          userInfo.address.isNotEmpty;
+      print('DEBUG ROUTER: profileComplete = $profileComplete');
+
+      if (!profileComplete) {
+        // Profile incomplete - redirect to edit unless already there
+        return '/profile/edit';
+      }
+
+      // Profile complete - if on auth page, redirect to app
+      if (isOnAuthPage) {
         return '/free';
       }
 
-      // If logged in and trying to access other pages, ensure profile is complete
-      if (isLoggedIn && state.matchedLocation != '/profile/edit') {
-        // Wait for user info to load before deciding
-        if (userInfoAsync == null ||
-            userInfoAsync.isLoading ||
-            !userInfoAsync.hasValue) {
-          return null; // Allow navigation while loading, will re-check when loaded
-        }
-        final userInfo = userInfoAsync.value;
-        final needsSetup =
-            userInfo == null ||
-            userInfo.name.isEmpty ||
-            userInfo.address.isEmpty;
-        if (needsSetup) {
-          return '/profile/edit';
-        }
-      }
-
-      // No redirect needed
       return null;
     },
     routes: [
