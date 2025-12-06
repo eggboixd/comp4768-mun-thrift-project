@@ -50,7 +50,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isLoggedIn && isLoggingIn) {
         // Wait for user info to fully load before making any redirect decisions
         // This prevents premature redirects when data is still loading
-        if (userInfoAsync == null || userInfoAsync.isLoading || !userInfoAsync.hasValue) {
+        if (userInfoAsync == null ||
+            userInfoAsync.isLoading ||
+            !userInfoAsync.hasValue) {
           return null; // Stay on current page while loading
         }
         final userInfo = userInfoAsync.value;
@@ -67,7 +69,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // If logged in and trying to access other pages, ensure profile is complete
       if (isLoggedIn && state.matchedLocation != '/profile/edit') {
         // Wait for user info to load before deciding
-        if (userInfoAsync == null || userInfoAsync.isLoading || !userInfoAsync.hasValue) {
+        if (userInfoAsync == null ||
+            userInfoAsync.isLoading ||
+            !userInfoAsync.hasValue) {
           return null; // Allow navigation while loading, will re-check when loaded
         }
         final userInfo = userInfoAsync.value;
