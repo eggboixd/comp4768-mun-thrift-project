@@ -55,7 +55,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // For all other pages, check if profile is complete
       if (userInfoAsync == null || userInfoAsync.isLoading) {
         // Data still loading - stay on current page and wait
-        print('DEBUG ROUTER: Waiting for data - isLoading: ${userInfoAsync?.isLoading}, hasValue: ${userInfoAsync?.hasValue}');
+        print(
+          'DEBUG ROUTER: Waiting for data - isLoading: ${userInfoAsync?.isLoading}, hasValue: ${userInfoAsync?.hasValue}',
+        );
         return null;
       }
 
@@ -66,7 +68,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       final userInfo = userInfoAsync.value;
-      print('DEBUG ROUTER: Got userInfo - name: "${userInfo?.name}", address: "${userInfo?.address}"');
+      print(
+        'DEBUG ROUTER: Got userInfo - name: "${userInfo?.name}", address: "${userInfo?.address}"',
+      );
       final profileComplete =
           userInfo != null &&
           userInfo.name.isNotEmpty &&

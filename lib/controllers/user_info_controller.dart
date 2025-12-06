@@ -31,7 +31,9 @@ class UserInfoController extends StateNotifier<AsyncValue<UserInfo?>> {
 
       // Always load from Firestore to get latest data
       final userInfo = await _firestoreService.getUserInfo(userId);
-      print('DEBUG UserInfoController: Loaded user info for $userId - name: ${userInfo?.name}, address: ${userInfo?.address}');
+      print(
+        'DEBUG UserInfoController: Loaded user info for $userId - name: ${userInfo?.name}, address: ${userInfo?.address}',
+      );
       state = AsyncValue.data(userInfo);
 
       // Cache the data
