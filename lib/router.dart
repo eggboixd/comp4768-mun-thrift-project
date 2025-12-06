@@ -64,6 +64,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/free';
       }
 
+      // If logged in and trying to access other pages, ensure profile is complete
+      if (isLoggedIn && state.matchedLocation != '/profile/edit') {
+        // Wait for user info to load before deciding
+        if (userInfoAsync == null || !userInfoAsync.hasValue) {
+          return null;
+        }
+        final userInfo = userInfoAsync.value;
+        final needsSetup =
+            userInfo == null ||
+            userInfo.name.isEmpty ||
+            userInfo.address.isEmpty;
+        if (needsSetup) {
+          return '/profile/edit';
+        }
+      }
+
       // No redirect needed
       return null;
     },

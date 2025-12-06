@@ -24,10 +24,12 @@ class UserInfoController extends StateNotifier<AsyncValue<UserInfo?>> {
     state = const AsyncValue.loading();
 
     try {
-      // Try to load from cache first
+      // Try to load from cache first (only if it has valid data)
       if (_cacheBox != null) {
         final cachedData = _cacheBox.get('user_$userId');
-        if (cachedData != null) {
+        if (cachedData != null && 
+            cachedData['name'] != null && 
+            (cachedData['name'] as String).isNotEmpty) {
           final cachedUser = UserInfo(
             id: userId,
             name: cachedData['name'] ?? '',
@@ -39,7 +41,7 @@ class UserInfoController extends StateNotifier<AsyncValue<UserInfo?>> {
         }
       }
 
-      // Load from Firestore
+      // Always load from Firestore to get latest data
       final userInfo = await _firestoreService.getUserInfo(userId);
       state = AsyncValue.data(userInfo);
 
