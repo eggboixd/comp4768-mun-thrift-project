@@ -64,8 +64,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/free';
       }
 
-      
-
       // No redirect needed
       return null;
     },
