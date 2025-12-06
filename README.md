@@ -1,3 +1,7 @@
 # comp4768_mun_thrift
 
-A new Flutter project.
+| Name   |      Student ID      |
+|----------|:-------------:|
+| Fadhil Revinno Hairiman |  202514421 |
+| Kyle Denief |   202245379    |
+
