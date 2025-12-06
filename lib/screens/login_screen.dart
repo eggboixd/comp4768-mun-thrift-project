@@ -5,7 +5,6 @@ import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../services/firestore_service.dart';
 import '../controllers/cart_controller.dart';
-import '../controllers/user_info_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -58,22 +57,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         } catch (e) {
           print('Error saving FCM token on login: $e');
         }
-
-        // Wait for user info to load before navigating
-        final userInfoAsync = ref.read(
-          userInfoControllerProvider(userCredential.user!.uid),
-        );
-        await userInfoAsync.when(
-          data: (_) => Future.value(),
-          loading: () => Future.delayed(const Duration(milliseconds: 100)),
-          error: (_, __) => Future.value(),
-        );
       }
 
-      if (mounted) {
-        // Let the router redirect based on user info completion
-        context.go('/free');
-      }
+      // Don't navigate manually - let the router handle it based on auth state
+      // The router watches authStateChangesProvider and will automatically redirect
+      // after checking user profile completion
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

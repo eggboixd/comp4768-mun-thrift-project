@@ -48,10 +48,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // If logged in and on login/signup pages, check user info
       if (isLoggedIn && isLoggingIn) {
-        // If we don't have user info yet (still loading or not watched), don't redirect yet.
-        // Only redirect when we've loaded user info and determined setup is needed.
-        if (userInfoAsync == null || !userInfoAsync.hasValue) {
-          return null;
+        // Wait for user info to fully load before making any redirect decisions
+        // This prevents premature redirects when data is still loading
+        if (userInfoAsync == null || userInfoAsync.isLoading || !userInfoAsync.hasValue) {
+          return null; // Stay on current page while loading
         }
         final userInfo = userInfoAsync.value;
         final needsSetup =
@@ -67,8 +67,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // If logged in and trying to access other pages, ensure profile is complete
       if (isLoggedIn && state.matchedLocation != '/profile/edit') {
         // Wait for user info to load before deciding
-        if (userInfoAsync == null || !userInfoAsync.hasValue) {
-          return null;
+        if (userInfoAsync == null || userInfoAsync.isLoading || !userInfoAsync.hasValue) {
+          return null; // Allow navigation while loading, will re-check when loaded
         }
         final userInfo = userInfoAsync.value;
         final needsSetup =
