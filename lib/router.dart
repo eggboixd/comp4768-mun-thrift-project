@@ -64,21 +64,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/free';
       }
 
-      // If logged in and user info not set up, force to /profile/edit
-      if (isLoggedIn && state.matchedLocation != '/profile/edit') {
-        // If we don't have user info yet, skip redirect (userInfo is still loading)
-        if (userInfoAsync == null || !userInfoAsync.hasValue) {
-          return null;
-        }
-        final userInfo = userInfoAsync.value;
-        final needsSetup =
-            userInfo == null ||
-            userInfo.name.isEmpty ||
-            userInfo.address.isEmpty;
-        if (needsSetup) {
-          return '/profile/edit';
-        }
-      }
+      
 
       // No redirect needed
       return null;
